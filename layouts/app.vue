@@ -98,9 +98,10 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'nuxt-property-decorator'
+import 'firebase/auth'
 
-import { getGravatarUrl } from '~/assets/gravatar'
+import firebase from 'firebase/app'
+import { Component, Vue } from 'nuxt-property-decorator'
 
 @Component<AppLayout>({
   created() {
@@ -172,7 +173,7 @@ export default class AppLayout extends Vue {
   }
 
   get isReady() {
-    return this.isAuthReady && this.$fireAuth.currentUser
+    return this.isAuthReady && this.$accessor.user
   }
 
   get isAuthReady() {
@@ -180,31 +181,31 @@ export default class AppLayout extends Vue {
   }
 
   getGravatarUrl() {
-    const { currentUser } = this.$fireAuth
+    const { user } = this.$accessor
 
-    if (currentUser) {
-      return getGravatarUrl(currentUser.email || undefined)
+    if (user) {
+      return user.photoURL || '/svg/user-svgrepo-com.svg'
     }
 
-    return ''
+    return '/svg/user-svgrepo-com.svg'
   }
 
   getUserName() {
-    const { currentUser } = this.$fireAuth
+    const { user } = this.$accessor
 
-    if (currentUser) {
-      return currentUser.displayName || (currentUser as any).name
+    if (user) {
+      return user.displayName || (user as any).name
     }
 
     return ''
   }
 
   doLogout() {
-    this.$fireAuth.signOut()
+    return firebase.auth().signOut()
   }
 
   onAuthChanged() {
-    if (this.isAuthReady && !this.$fireAuth.currentUser) {
+    if (this.isAuthReady && !this.$accessor.user) {
       this.$router.push('/login')
     }
   }

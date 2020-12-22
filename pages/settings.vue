@@ -102,8 +102,7 @@ export default class SettingsPage extends Vue {
   readonly lvRange = [1, 60]
 
   get email() {
-    const u = this.$fireAuth.currentUser
-    return u ? u.email : null
+    return this.$accessor.user?.email || null
   }
 
   created() {

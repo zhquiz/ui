@@ -307,7 +307,7 @@ export default class LevelPage extends Vue {
 
       this.selected.cardIds = result
         .map((r: any) => r.cardId)
-        .filter((id) => id)
+        .filter((id: string) => id)
       this.$set(this.selected, 'quizIds', this.selected.cardIds)
     }
   }

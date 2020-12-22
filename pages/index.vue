@@ -1,30 +1,58 @@
 <template>
-  <b-loading active />
+  <b-loading v-if="!isAuthReady" active />
+  <section v-else class="IndexPage">
+    <client-only>
+      <article>
+        <div class="content">
+          <h1>ZhQuiz - A Chinese quizzing app</h1>
+
+          <button class="button is-info" @click="doLogin" @keypress="doLogin">
+            <span>
+              <fontawesome :icon="['fab', 'google']" />
+            </span>
+            <span>Login with Google</span>
+          </button>
+
+          <h4>
+            So, you want to learn Chinese. Let's see. How much you can read?
+          </h4>
+
+          <figure class="image is-16by9">
+            <iframe
+              title="video-demo"
+              class="has-ratio"
+              src="https://www.youtube.com/embed/iomE0xiYoqY"
+              frameborder="0"
+              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            />
+          </figure>
+
+          <h2>Features</h2>
+
+          <ul>
+            <li>HSK vocabularies made into 60 levels</li>
+            <li>Flashcards showing statuses of success</li>
+            <li>Custom vocabularies input by users</li>
+            <li>Speech-enabled</li>
+          </ul>
+
+          <h4>Login to try now.</h4>
+        </div>
+      </article>
+
+      <div class="background" />
+    </client-only>
+  </section>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'nuxt-property-decorator'
 
-@Component<IndexPage>({
-  watch: {
-    '$store.state.isAuthReady'() {
-      this.navigate()
-    },
-  },
-})
+@Component
 export default class IndexPage extends Vue {
-  mounted() {
-    this.navigate()
-  }
-
-  navigate() {
-    if (this.$accessor.isAuthReady) {
-      if (this.$fireAuth.currentUser) {
-        this.$router.push('/random')
-      } else {
-        this.$router.push('/login')
-      }
-    }
+  get isAuthReady() {
+    return this.$accessor.isAuthReady
   }
 }
 </script>

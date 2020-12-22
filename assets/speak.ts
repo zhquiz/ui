@@ -49,7 +49,7 @@ export async function speak(s: string, lang: string = 'zh') {
     utterance.lang = lang
     speechSynthesis.speak(utterance)
 
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       utterance.onend = () => {
         resolve()
       }

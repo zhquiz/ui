@@ -64,7 +64,7 @@
           <b-collapse
             class="card"
             animation="slide"
-            style="margin-bottom: 1em;"
+            style="margin-bottom: 1em"
             :open="typeof current === 'object'"
           >
             <div

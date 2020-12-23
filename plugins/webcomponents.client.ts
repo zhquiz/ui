@@ -1,5 +1,3 @@
-import he from 'he'
-
 import { speak } from '~/assets/speak'
 
 customElements.define(
@@ -9,7 +7,7 @@ customElements.define(
     aEl: HTMLAnchorElement | null = null
 
     get s() {
-      return this.innerHTML.trim()
+      return (this.textContent || '').trim()
     }
 
     constructor() {
@@ -67,7 +65,7 @@ customElements.define(
 
       this.isSpeaking = true
       this.aEl.classList.add('active')
-      await speak(he.decode(this.s))
+      await speak(this.s)
       this.aEl.classList.remove('active')
       this.isSpeaking = false
     }

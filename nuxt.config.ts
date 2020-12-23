@@ -33,14 +33,6 @@ export default (): NuxtConfig => {
         },
       ],
       link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
-      script: [
-        {
-          async: true,
-          defer: true,
-          'data-domain': 'zhquiz.cc',
-          src: 'https://plausible.io/js/plausible.js',
-        },
-      ],
     },
     /*
      ** Global CSS
@@ -52,10 +44,12 @@ export default (): NuxtConfig => {
      */
     plugins: [
       '~/plugins/axios-loading.client.ts',
+      '~/plugins/axios-nuxt.ts',
       '~/plugins/axios-query.ts',
       '~/plugins/codemirror.client.js',
       '~/plugins/filter.ts',
       '~/plugins/firebase-auth.client.ts',
+      '~/plugins/plausible.client.js',
       '~/plugins/vue-context.client.js',
       '~/plugins/webcomponents.client.ts',
     ],
@@ -126,19 +120,9 @@ export default (): NuxtConfig => {
           },
         },
       ],
-      [
-        '@nuxtjs/firebase',
-        {
-          config: JSON.parse(process.env.FIREBASE_CONFIG!),
-          services: {
-            auth: true,
-            storage: true,
-          },
-        },
-      ],
     ],
     proxy: {
-      '/api/': 'http://localhost:8080',
+      '/api/': `http://localhost:${process.env.SERVER_PORT}`,
     },
     pwa: {
       meta: {
@@ -151,14 +135,6 @@ export default (): NuxtConfig => {
      */
     build: {
       transpile: [/typed-vuex/],
-      // @ts-ignore
-      extend: (config) => {
-        config.module!.rules.push({
-          test: /\.ya?ml$/,
-          type: 'json', // Required by Webpack v4
-          use: 'yaml-loader',
-        })
-      },
     },
   }
 }

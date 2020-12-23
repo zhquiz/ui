@@ -456,7 +456,6 @@
 <script lang="ts">
 import { Component, Vue } from 'nuxt-property-decorator'
 
-// @ts-ignore
 import cardDefault from '~/assets/card-default.yaml'
 import { doClick, doMapKeypress } from '~/assets/keypress'
 import { markdownToHtml } from '~/assets/make-html'

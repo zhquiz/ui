@@ -1,13 +1,16 @@
-import dayjs from 'dayjs'
+import { Duration } from 'native-duration'
 import Vue from 'vue'
-
-import { humanizeDuration } from '~/assets/humanize-duration'
 
 Vue.filter('format', (v: any) => {
   if (typeof v === 'number') {
     return v || v === 0 ? v.toLocaleString() : ''
   } else if (v instanceof Date) {
-    return dayjs(v).format('YYYY-MM-DD HH:mm')
+    return v.toLocaleDateString([], {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'short',
+    })
   } else if (v && typeof v === 'object') {
     return JSON.stringify(v)
   }
@@ -15,9 +18,21 @@ Vue.filter('format', (v: any) => {
 })
 
 Vue.filter('formatDate', (v: any) => {
-  return v ? dayjs(v).format('YYYY-MM-DD HH:mm') : ''
+  return v
+    ? new Date(v).toLocaleDateString([], {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'short',
+      })
+    : ''
 })
 
 Vue.filter('duration', (v: any) => {
-  return v ? humanizeDuration(+new Date(v) - +new Date()) : ''
+  return v
+    ? new Duration(new Date(v), new Date()).toString({
+        sign: false,
+        granularity: 2,
+      })
+    : ''
 })

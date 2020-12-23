@@ -1,6 +1,4 @@
 import { Plugin } from '@nuxt/types'
-// @ts-ignore
-import rison from 'rison-node'
 
 const onInit: Plugin = ({ $axios }) => {
   $axios.defaults.paramsSerializer = (query: Record<string, any>) => {
@@ -8,27 +6,6 @@ const onInit: Plugin = ({ $axios }) => {
       .map(([k, v]) => {
         if (!v) {
           return
-        }
-
-        if (
-          [
-            'select',
-            'sort',
-            'type',
-            'stage',
-            'direction',
-            'tag',
-            'offset',
-            'limit',
-            'page',
-            'perPage',
-            'count',
-            'level',
-            'levelMin',
-          ].includes(k) ||
-          /^is[A-Z]/.test(k)
-        ) {
-          v = rison.encode(v)
         }
 
         return `${encodeURIMin(k)}=${encodeURIMin(v)}`

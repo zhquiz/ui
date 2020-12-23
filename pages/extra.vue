@@ -129,7 +129,7 @@ interface IExtra {
 }
 
 @Component<ExtraPage>({
-  layout: 'app',
+  layout: 'logged-in',
   created() {
     this.load()
   },

@@ -411,7 +411,7 @@ import { Component, Vue } from 'nuxt-property-decorator'
 import { speak } from '~/assets/speak'
 
 @Component<HanziPage>({
-  layout: 'app',
+  layout: 'logged-in',
   watch: {
     q() {
       this.onQChange(this.q)

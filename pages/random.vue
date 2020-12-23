@@ -260,7 +260,7 @@ import { doMapKeypress } from '~/assets/keypress'
 import { speak } from '~/assets/speak'
 
 @Component<RandomPage>({
-  layout: 'app',
+  layout: 'logged-in',
   mounted() {
     window.onkeypress = this.onKeypress.bind(this)
     Promise.all([this.loadHanzi(), this.loadVocab(), this.loadSentence()])

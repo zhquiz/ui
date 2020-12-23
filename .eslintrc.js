@@ -17,5 +17,6 @@ module.exports = {
     'vue/no-v-html': 0,
     'require-await': 0,
     'import/order': 0,
+    'no-lonely-if': 0,
   },
 }

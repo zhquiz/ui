@@ -1,8 +1,7 @@
 <template>
-  <section class="AppLayout">
-    <b-loading v-if="!isReady" active />
-
-    <nav v-if="isReady" class="vertical-nav">
+  <b-loading v-if="!(store.state.isAuthReady && store.state.user)" active />
+  <section v-else class="AppLayout">
+    <nav class="vertical-nav">
       <div class="icon-nav">
         <component
           :is="nav.to ? 'router-link' : 'a'"
@@ -44,7 +43,7 @@
       </div>
     </nav>
 
-    <b-navbar v-if="isReady" class="main-nav has-shadow is-warning">
+    <b-navbar class="main-nav has-shadow is-warning">
       <template slot="brand">
         <b-navbar-item tag="router-link" to="/">
           <strong>Zh</strong>
@@ -92,8 +91,7 @@
       </template>
     </b-navbar>
 
-    <nuxt v-if="isReady" class="main" />
-    <b-loading v-else active />
+    <nuxt class="main" />
   </section>
 </template>
 
@@ -103,19 +101,7 @@ import 'firebase/auth'
 import firebase from 'firebase/app'
 import { Component, Vue } from 'nuxt-property-decorator'
 
-@Component<AppLayout>({
-  created() {
-    this.onAuthChanged()
-  },
-  watch: {
-    isAuthReady() {
-      this.onAuthChanged()
-    },
-    user() {
-      this.onAuthChanged()
-    },
-  },
-})
+@Component
 export default class AppLayout extends Vue {
   get navItems() {
     return [
@@ -172,14 +158,6 @@ export default class AppLayout extends Vue {
     return level ? level.toString() : ' '
   }
 
-  get isReady() {
-    return this.isAuthReady && this.$accessor.user
-  }
-
-  get isAuthReady() {
-    return this.$accessor.isAuthReady
-  }
-
   getGravatarUrl() {
     const { user } = this.$accessor
 
@@ -202,12 +180,6 @@ export default class AppLayout extends Vue {
 
   doLogout() {
     return firebase.auth().signOut()
-  }
-
-  onAuthChanged() {
-    if (this.isAuthReady && !this.$accessor.user) {
-      this.$router.push('/login')
-    }
   }
 }
 </script>

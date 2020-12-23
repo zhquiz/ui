@@ -124,7 +124,7 @@ import { Component, Vue } from 'nuxt-property-decorator'
 import { speak } from '~/assets/speak'
 
 @Component<LevelPage>({
-  layout: 'app',
+  layout: 'logged-in',
   created() {
     this.init()
   },

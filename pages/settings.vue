@@ -91,7 +91,7 @@
 import { Component, Vue } from 'nuxt-property-decorator'
 
 @Component({
-  layout: 'app',
+  layout: 'logged-in',
 })
 export default class SettingsPage extends Vue {
   lv = [1, 60]

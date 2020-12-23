@@ -1,6 +1,9 @@
 import { Plugin } from '@nuxt/types'
+import { setClient } from '~/service/api'
 
 const plugin: Plugin = ({ $axios, error }) => {
+  setClient($axios)
+
   $axios.defaults.baseURL = location.origin
 
   $axios.interceptors.response.use(

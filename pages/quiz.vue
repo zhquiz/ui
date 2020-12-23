@@ -267,13 +267,13 @@
               v-show="!isQuizShownAnswer"
               ref="quizFront"
               class="content"
-              v-html="quizRendered.front"
+              v-html="templateRender('front')"
             />
             <div
               v-show="isQuizShownAnswer"
               ref="quizBack"
               class="content"
-              v-html="quizRendered.back"
+              v-html="templateRender('back')"
             />
             <b-loading :active="!isQuizItemReady" :is-full-page="false" />
           </div>
@@ -350,63 +350,6 @@
         </div>
       </b-modal>
 
-      <b-modal class="edit-modal" :active.sync="isEditModal">
-        <div class="card">
-          <div class="card-content">
-            <b-tabs type="is-boxed" @change="onEditTabChange">
-              <b-tab-item label="Front">
-                <MarkdownEditor
-                  ref="mde0"
-                  v-model="quizEditorData.front"
-                  :renderer="previewRender"
-                />
-              </b-tab-item>
-              <b-tab-item label="Back">
-                <MarkdownEditor
-                  ref="mde1"
-                  v-model="quizEditorData.back"
-                  :renderer="previewRender"
-                />
-              </b-tab-item>
-              <b-tab-item label="Mnemonic">
-                <MarkdownEditor
-                  ref="mde2"
-                  v-model="quizEditorData.mnemonic"
-                  :renderer="previewRender"
-                />
-              </b-tab-item>
-            </b-tabs>
-          </div>
-
-          <div class="card-footer">
-            <div class="flex-grow" />
-            <div class="buttons">
-              <button
-                class="button is-success"
-                @click="doEditSave"
-                @keypress="doEditSave"
-              >
-                Save
-              </button>
-              <button
-                class="button is-danger"
-                @click="openEditModal(quizEditorData._id)"
-                @keypress="openEditModal(quizEditorData._id)"
-              >
-                Reset
-              </button>
-              <button
-                class="button"
-                @click="isEditModal = false"
-                @keypress="isEditModal = false"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </b-modal>
-
       <b-loading :active="isLoading" />
 
       <client-only>
@@ -432,15 +375,6 @@
           <li>
             <a
               role="button"
-              @click.prevent="openEditModal(selectedRow.quizId)"
-              @keypress.prevent="openEditModal(selectedRow.quizId)"
-            >
-              Edit item
-            </a>
-          </li>
-          <li>
-            <a
-              role="button"
               @click.prevent="removeItem"
               @keypress.prevent="removeItem"
             >
@@ -455,25 +389,23 @@
 
 <script lang="ts">
 import { Component, Vue } from 'nuxt-property-decorator'
+import ejs from 'ejs'
+import makePinyin from 'chinese-to-pinyin'
 
-import cardDefault from '~/assets/card-default.yaml'
 import { doClick, doMapKeypress } from '~/assets/keypress'
-import { markdownToHtml } from '~/assets/make-html'
 import { speak } from '~/assets/speak'
 
-type IQuizType = 'hanzi' | 'vocab' | 'sentence' | 'extra'
+export type IQuizType = 'hanzi' | 'vocab' | 'sentence' | 'extra'
+export type ISide = 'front' | 'back'
 
 interface IQuizData {
-  _id: string
+  id: string
   type?: IQuizType
   direction?: string
   srsLevel?: number
   nextReview?: string
   stat?: any
   entry?: string
-  front?: string
-  back?: string
-  mnemonic?: string
   _meta?: {
     tag?: string[]
   }
@@ -562,30 +494,54 @@ export default class QuizPage extends Vue {
   quizIndex = 0
   isQuizShownAnswer = false
   isQuizItemReady = false
-  quizRendered = {
-    front: '',
-    back: '',
-  }
-
-  quizEditorData = {
-    _id: '',
-    front: '',
-    back: '',
-    mnemonic: '',
-  }
 
   quizData: {
     [quizId: string]: IQuizData
   } = {}
 
-  dictionaryData = {
-    hanzi: {} as Record<string, any>,
-    vocab: {} as Record<string, any>,
-    sentence: {} as Record<string, any>,
-    extra: {} as Record<string, any>,
-  }
+  quizRendered: {
+    [entry: string]: {
+      [type in IQuizType]: {
+        [direction: string]: {
+          [side in ISide]: string
+        }
+      }
+    }
+  } = {}
 
-  isEditModal = false
+  dictionaryData = {
+    hanzi: {} as Record<
+      string,
+      {
+        pinyin: string
+        english: string
+      }
+    >,
+    vocab: {} as Record<
+      string,
+      {
+        traditional: string[]
+        pinyin: string[]
+        english: string[]
+      }
+    >,
+    sentence: {} as Record<
+      string,
+      {
+        [id: string]: {
+          pinyin: string
+          english: string
+        }
+      }
+    >,
+    extra: {} as Record<
+      string,
+      {
+        pinyin: string
+        english: string
+      }
+    >,
+  }
 
   cache: {
     now: number
@@ -687,22 +643,7 @@ export default class QuizPage extends Vue {
     }
   }
 
-  previewRender(md: string) {
-    const { _id: quizId } = this.quizEditorData
-    if (quizId) {
-      const { entry, type } = this.quizData[quizId] || {}
-      const ctx = entry && type ? this.renderContext(entry, type) : null
-
-      return markdownToHtml(md, {
-        entry,
-        ...(ctx || {}),
-      })
-    }
-
-    return md
-  }
-
-  templateRender(side: 'front' | 'back', relativePosition = 0) {
+  templateRender(side: ISide, relativePosition = 0) {
     const it = this.quizData[this.quizArray[this.quizIndex + relativePosition]]
 
     if (!it) {
@@ -711,19 +652,20 @@ export default class QuizPage extends Vue {
 
     const { entry, type, direction } = it
 
-    if (!entry || !type) {
+    if (!entry || !type || !direction) {
       return ''
     }
 
-    const md = it[side] || cardDefault[type][direction][side] || ''
-    const ctx = this.renderContext(entry, type)
+    let html = ''
+    try {
+      // Use try/catch instead of nullish Elvis operator
+      html = this.quizRendered[entry][type][direction][side]
+    } catch (_) {}
 
-    const html = markdownToHtml(md, {
-      entry,
-      ...ctx,
-    })
-
-    this.quizRendered[side] = html
+    if (!html) {
+      // Do not await
+      this.cacheQuizItem({ quizId: it.id })
+    }
 
     return html
   }
@@ -787,9 +729,9 @@ export default class QuizPage extends Vue {
     )
 
     this.quizArray = []
-    quiz.map(({ _id, nextReview, srsLevel, stat }: any) => {
-      this.quizArray.push(_id)
-      this.quizData[_id] = { _id, nextReview, srsLevel, stat }
+    quiz.map(({ id, nextReview, srsLevel, stat }: any) => {
+      this.quizArray.push(id)
+      this.quizData[id] = { id, nextReview, srsLevel, stat }
     })
 
     this.$set(this, 'quizArray', this.quizArray)
@@ -916,52 +858,703 @@ export default class QuizPage extends Vue {
       })
       q = Object.assign(q, r)
 
-      q._id = quizId
+      q.id = quizId
       q.type = q.type as IQuizType
       q.entry = q.entry as string
 
       this.$set(this.quizData, quizId, q)
     }
 
-    let data = this.dictionaryData[q.type][q.entry]
-    if (!data) {
-      if (q.type !== 'extra') {
-        data = (
-          await this.$axios.$get(`/api/${q.type}/match`, {
-            params: {
-              entry: q.entry,
-            },
-          })
-        ).result
+    const { entry } = q
+    const data = this.dictionaryData[q.type][entry]
 
-        if (q.type === 'vocab') {
-          const { vocabs } = data
-          const simplified = vocabs[0].simplified
-          const u = (k: string) => {
-            const arr = (vocabs as any[])
-              .map((v) => (v as any)[k] as string)
-              .filter((t) => t)
-              .filter((t, i, arr) => arr.indexOf(t) === i)
-            return arr.length > 0 ? arr : undefined
-          }
-          Object.assign(data, {
-            simplified,
-            traditional: u('traditional'),
-            pinyin: u('pinyin')!,
-            english: u('english'),
-          })
-        }
-      } else {
-        data = (
-          await this.$axios.$get('/api/extra/', {
-            params: {
-              q: q.entry,
-            },
-          })
-        ).result
+    if (!data) {
+      const mask = (s: string, ...ws: string[]) => {
+        ws.map((w) => {
+          s = s.replace(
+            new RegExp(
+              `(^| |[^a-z])(${w
+                .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                .replace(/\d/g, '\\d?')
+                .replace(/\s+/g, '\\s*')})($| |[^a-z])`,
+              'gi'
+            ),
+            '$1<span class="gray-box">$2</span>$3'
+          )
+        })
+
+        return s
       }
 
-      this.$set(this.dictionaryData[q.type], q.entry, data)
+      const setTemplate: {
+        [type in IQuizType]: () => Promise<void>
+      } = {
+        hanzi: async () => {
+          if (this.quizRendered[entry].hanzi) {
+            return
+          }
+
+          const { pinyin, english } =
+            this.dictionaryData.hanzi[entry] ||
+            (await this.$axios
+              .$get<{
+                pinyin: string
+                english: string
+              }>('/api/hanzi/match', {
+                params: {
+                  entry,
+                  select: 'pinyin,english',
+                },
+              })
+              .then((r) => this.$set(this.dictionaryData.hanzi, entry, r)))
+
+          this.quizRendered[entry].hanzi = {
+            se: {
+              front: ejs.render(
+                `
+              <h4>Hanzi Chinese-English</h4>
+              <div class="font-chinese text-w-normal" style="font-size: 3rem;">
+                <%= entry %>
+              </div>
+              `,
+                {
+                  entry,
+                  pinyin,
+                  english,
+                }
+              ),
+              back: ejs.render(
+                `
+              <div class="inline-block mr-4">
+                <%= pinyin %>
+              </div>
+              <x-speak-button class="speak-item--1">
+                <%= entry %>
+              </x-speak-button>
+
+              <%= english %>
+              `,
+                {
+                  entry,
+                  pinyin,
+                  english,
+                }
+              ),
+            },
+            ec: {
+              front: ejs.render(
+                `
+              <h4>Hanzi English-Chinese</h4>
+
+              <%= mask(english, entry) %>
+              `,
+                {
+                  mask,
+                  entry,
+                  english,
+                }
+              ),
+              back: ejs.render(
+                `
+              <div class="hanzi-display">
+                <%= entry %>
+              </div>
+              <x-speak-button class="speak-item--1">
+                <%= entry %>
+              </x-speak-button>
+
+              <%= pinyin %>
+              `,
+                {
+                  entry,
+                  pinyin,
+                }
+              ),
+            },
+          }
+
+          this.$set(
+            this.quizRendered,
+            `${entry}.hanzi`,
+            this.quizRendered[entry].hanzi
+          )
+        },
+        vocab: async () => {
+          if (this.quizRendered[entry].vocab) {
+            return
+          }
+
+          const { traditional, pinyin, english } =
+            this.dictionaryData.vocab[entry] ||
+            (await this.$axios
+              .$get<{
+                result: {
+                  traditional?: string
+                  pinyin: string
+                  english: string
+                }[]
+              }>('/api/vocab/match', {
+                params: {
+                  entry,
+                  select: 'traditional,pinyin,english',
+                },
+              })
+              .then(({ result }) =>
+                this.$set(this.dictionaryData.vocab, entry, {
+                  traditional: result
+                    .map(({ traditional }) => traditional!)
+                    .filter((r) => r),
+                  pinyin: result.map(({ pinyin }) => pinyin),
+                  english: result.map(({ english }) => english),
+                })
+              ))
+
+          const sentences = await this.$axios
+            .$get<{
+              result: {
+                id: string
+                chinese: string
+                english: string
+              }[]
+            }>('/api/sentence/q', {
+              params: {
+                entry,
+                select: 'id,chinese,english',
+              },
+            })
+            .then(({ result }) => {
+              return result.map((r) => {
+                const out = this.dictionaryData.sentence[r.chinese] || {}
+                out[r.id] = {
+                  pinyin: makePinyin(r.chinese, {
+                    keepRest: true,
+                  }),
+                  english: r.english,
+                }
+
+                this.$set(
+                  this.dictionaryData.sentence,
+                  r.chinese,
+                  this.dictionaryData.sentence[r.chinese]
+                )
+
+                return {
+                  chinese: r.chinese,
+                  english: r.english,
+                }
+              })
+            })
+
+          this.quizRendered[entry].vocab = {
+            se: {
+              front: ejs.render(
+                `
+              <h4>Vocab Simplified-English</h4>
+
+              <div class="font-zh-simp text-w-normal" style="font-size: 2rem;">
+                <%= entry %>
+              </div>
+              `,
+                { entry }
+              ),
+              back: ejs.render(
+                `
+              <% if (traditional.length) { %>
+                <div>
+                  <div class="font-zh-trad text-w-normal inline-block mr-4" style="font-size: 1.7rem;">
+                    <%= traditional.join(' | ') %>
+                  </div>
+
+                  <x-speak-button class="speak-item--1">
+                    <%= entry %>
+                  </x-speak-button>
+                </div>
+              <% } %>
+
+              <div>
+                <div class="inline-block mr-4">
+                  <%= pinyin.join(' | ') %>
+                </div>
+
+                <% if (!traditional.length) { %>
+                  <x-speak-button class="speak-item--1">
+                    <%= entry %>
+                  </x-speak-button>
+                <% } %>
+              </div>
+
+              <ul>
+                <% english.map(it => { %>
+                  <li><%= it %></li>
+                <% }) %>
+              </ul>
+
+              <% if (sentences.length) { %>
+                <ul>
+                  <% sentences.map(it => { %>
+                    <li>
+                      <%= it.chinese %>
+                      <ul>
+                        <li>
+                          <%= it.english %>
+                        </li>
+                      </ul>
+                    </li>
+                  <% }) %>
+                </ul>
+              <% } %>
+              `,
+                {
+                  entry,
+                  traditional,
+                  pinyin,
+                  english,
+                  sentences,
+                }
+              ),
+            },
+            te: {
+              front: ejs.render(
+                `
+              <h4>Vocab Traditional-English</h4>
+
+              <div class="font-zh-trad text-w-normal" style="font-size: 1.7rem">
+                <%= traditional.join(' | ') %>
+              </div>
+              `,
+                {
+                  traditional,
+                }
+              ),
+              back: ejs.render(
+                `
+              <div>
+                <div class="font-zh-simp text-w-normal inline-block mr-4" style="font-size: 2rem;">
+                  <%= entry %>
+                </div>
+
+                <x-speak-button class="speak-item--1">
+                  <%= entry %>
+                </x-speak-button>
+              </div>
+
+              <div>
+                <%= pinyin.join(' | ') %>
+              </div>
+
+              <ul>
+                <% english.map(it => { %>
+                  <li><%= it %></li>
+                <% }) %>
+              </ul>
+
+              <% if (sentences.length) { %>
+                <ul>
+                  <% sentences.map(it => { %>
+                    <li>
+                      <%= it.chinese %>
+                      <ul>
+                        <li>
+                          <%= it.english %>
+                        </li>
+                      </ul>
+                    </li>
+                  <% }) %>
+                </ul>
+              <% } %>
+              `,
+                {
+                  entry,
+                  traditional,
+                  pinyin,
+                  english,
+                  sentences,
+                }
+              ),
+            },
+            ec: {
+              front: ejs.render(
+                `
+              <h4>Vocab English-Chinese</h4>
+
+              <ul>
+                <% english.map(it => { %>
+                  <%= mask(it, entry, ...pinyin, ...traditional) %>
+                <% }) %>
+              </ul>
+              `,
+                {
+                  entry,
+                  english,
+                  pinyin,
+                  traditional,
+                }
+              ),
+              back: ejs.render(
+                `
+              <div>
+                <div class="font-zh-simp text-w-normal inline-block mr-4" style="font-size: 2rem;">
+                  <%= entry %>
+                </div>
+
+                <x-speak-button class="speak-item--1">
+                  <%= entry %>
+                </x-speak-button>
+              </div>
+
+              <% if (traditional.length) { %>
+                <div>
+                  <div class="font-zh-trad text-w-normal inline-block mr-4" style="font-size: 1.7rem;">
+                    <%= traditional.join(' | ') %>
+                  </div>
+                </div>
+              <% } %>
+
+              <div>
+                <%= pinyin.join(' | ') %>
+              </div>
+
+              <% if (sentences.length) { %>
+                <ul>
+                  <% sentences.map(it => { %>
+                    <li>
+                      <%= it.chinese %>
+                      <ul>
+                        <li>
+                          <%= it.english %>
+                        </li>
+                      </ul>
+                    </li>
+                  <% }) %>
+                </ul>
+              <% } %>
+              `,
+                {
+                  entry,
+                  traditional,
+                  pinyin,
+                  english,
+                  sentences,
+                }
+              ),
+            },
+          }
+
+          this.$set(
+            this.quizRendered,
+            `${entry}.vocab`,
+            this.quizRendered[entry].vocab
+          )
+        },
+        sentence: async () => {
+          if (this.quizRendered[entry].sentence) {
+            return
+          }
+
+          const sentences =
+            this.dictionaryData.sentence[entry] ||
+            (await this.$axios
+              .$get<{
+                result: {
+                  id: string
+                  chinese: string
+                  english: string
+                }[]
+              }>('/api/sentence/match', {
+                params: {
+                  entry,
+                  select: 'id,english',
+                },
+              })
+              .then(({ result }) => {
+                return result.map((r) => {
+                  const out = this.dictionaryData.sentence[r.chinese] || {}
+                  out[r.id] = {
+                    pinyin: makePinyin(r.chinese, {
+                      keepRest: true,
+                    }),
+                    english: r.english,
+                  }
+
+                  this.$set(
+                    this.dictionaryData.sentence,
+                    r.chinese,
+                    this.dictionaryData.sentence[r.chinese]
+                  )
+
+                  return {
+                    chinese: r.chinese,
+                    english: r.english,
+                  }
+                })
+              }))
+
+          this.quizRendered[entry].sentence = {
+            se: {
+              front: ejs.render(
+                `
+              <h4>Sentence Chinese-English</h4>
+
+              <h2 class="font-zh-simp text-w-normal">
+                <%= entry %>
+              </h2>
+              `,
+                { entry }
+              ),
+              back: ejs.render(
+                `
+              <div>
+                <h2 class="font-zh-simp text-w-normal inline-block">
+                  <%= entry %>
+                </h2>
+                <x-speak-button class="speak-item--1">
+                  <%= entry %>
+                </x-speak-button>
+              </div>
+
+              <ul>
+                <% Object.values(sentences).map(({ pinyin }) => %>
+                  <li>
+                    <%= pinyin %>
+                  </li>
+                <% }) %>
+              </ul>
+
+              <ul>
+                <% Object.values(sentences).map(({ english }) => %>
+                  <li>
+                    <%= english %>
+                  </li>
+                <% }) %>
+              </ul>
+              `,
+                {
+                  entry,
+                  sentences,
+                }
+              ),
+            },
+            ec: {
+              front: ejs.render(
+                `
+              <h4>Sentence English-Chinese</h4>
+
+              <ul>
+                <% Object.values(sentences).map(({ english }) => %>
+                  <li>
+                    <%= english %>
+                  </li>
+                <% }) %>
+              </ul>
+              `,
+                {
+                  sentences,
+                }
+              ),
+              back: ejs.render(
+                `
+              <div>
+                <h2 class="font-zh-simp text-w-normal inline-block">
+                  <%= entry %>
+                </h2>
+                <x-speak-button class="speak-item--1">
+                  <%= entry %>
+                </x-speak-button>
+              </div>
+
+              <ul>
+                <% Object.values(sentences).map(({ pinyin }) => %>
+                  <li>
+                    <%= pinyin %>
+                  </li>
+                <% }) %>
+              </ul>
+              `,
+                {
+                  entry,
+                  sentences,
+                }
+              ),
+            },
+          }
+
+          this.$set(
+            this.quizRendered,
+            `${entry}.sentence`,
+            this.quizRendered[entry].sentence
+          )
+        },
+        extra: async () => {
+          if (this.quizRendered[entry].extra) {
+            return
+          }
+
+          const { pinyin, english } =
+            this.dictionaryData.extra[entry] ||
+            (await this.$axios
+              .$get<{
+                pinyin: string
+                english: string
+              }>('/api/vocab/match', {
+                params: {
+                  entry,
+                  select: 'pinyin,english',
+                },
+              })
+              .then((r) => this.$set(this.dictionaryData.extra, entry, r)))
+
+          const sentences = await this.$axios
+            .$get<{
+              result: {
+                id: string
+                chinese: string
+                english: string
+              }[]
+            }>('/api/sentence/q', {
+              params: {
+                entry,
+                select: 'id,chinese,english',
+              },
+            })
+            .then(({ result }) => {
+              return result.map((r) => {
+                const out = this.dictionaryData.sentence[r.chinese] || {}
+                out[r.id] = {
+                  pinyin: makePinyin(r.chinese, {
+                    keepRest: true,
+                  }),
+                  english: r.english,
+                }
+
+                this.$set(
+                  this.dictionaryData.sentence,
+                  r.chinese,
+                  this.dictionaryData.sentence[r.chinese]
+                )
+
+                return {
+                  chinese: r.chinese,
+                  english: r.english,
+                }
+              })
+            })
+
+          this.quizRendered[entry].extra = {
+            se: {
+              front: ejs.render(
+                `
+              <h4>Extra Chinese-English</h4>
+
+              <div class="font-zh-simp text-w-normal" style="font-size: 2rem;">
+                <%= entry %>
+              </div>
+              `,
+                { entry }
+              ),
+              back: ejs.render(
+                `
+              <div>
+                <div class="inline-block mr-4">
+                  <%= pinyin %>
+                </div>
+
+                <x-speak-button class="speak-item--1">
+                  <%= entry %>
+                </x-speak-button>
+              </div>
+
+              <p>
+                <%= english %>
+              </p>
+
+              <% if (sentences.length) { %>
+                <ul>
+                  <% sentences.map(it => { %>
+                    <li>
+                      <%= it.chinese %>
+                      <ul>
+                        <li>
+                          <%= it.english %>
+                        </li>
+                      </ul>
+                    </li>
+                  <% }) %>
+                </ul>
+              <% } %>
+              `,
+                {
+                  entry,
+                  pinyin,
+                  english,
+                  sentences,
+                }
+              ),
+            },
+            ec: {
+              front: ejs.render(
+                `
+              <h4>Extra English-Chinese</h4>
+
+              <p>
+                <%= english %>
+              </p>
+              `,
+                {
+                  entry,
+                  english,
+                  pinyin,
+                }
+              ),
+              back: ejs.render(
+                `
+              <div>
+                <div class="font-zh-simp text-w-normal inline-block mr-4" style="font-size: 2rem;">
+                  <%= entry %>
+                </div>
+
+                <x-speak-button class="speak-item--1">
+                  <%= entry %>
+                </x-speak-button>
+              </div>
+
+              <div>
+                <%= pinyin %>
+              </div>
+
+              <% if (sentences.length) { %>
+                <ul>
+                  <% sentences.map(it => { %>
+                    <li>
+                      <%= it.chinese %>
+                      <ul>
+                        <li>
+                          <%= it.english %>
+                        </li>
+                      </ul>
+                    </li>
+                  <% }) %>
+                </ul>
+              <% } %>
+              `,
+                {
+                  entry,
+                  pinyin,
+                  english,
+                  sentences,
+                }
+              ),
+            },
+          }
+
+          this.$set(
+            this.quizRendered,
+            `${entry}.extra`,
+            this.quizRendered[entry].extra
+          )
+        },
+      }
+
+      await setTemplate[q.type]
     }
 
     this.isQuizItemReady = true
@@ -981,69 +1574,12 @@ export default class QuizPage extends Vue {
     this.initNextQuizItem()
   }
 
-  async doEditSave() {
-    const { _id, front, back, mnemonic } = this.quizEditorData
-    if (!_id) {
-      return
-    }
-
-    await this.$axios.$patch(
-      '/api/quiz',
-      {
-        set: {
-          front,
-          back,
-          mnemonic,
-        },
-      },
-      {
-        params: {
-          id: _id,
-        },
-      }
-    )
-
-    this.quizData[_id] = {
-      ...this.quizData,
-      ...this.quizEditorData,
-    }
-    this.cacheQuizItem({ relativePosition: 0 })
-
-    this.$buefy.snackbar.open('Saved')
-  }
-
-  async openEditModal(quizId?: string) {
-    quizId = quizId || this.quizCurrentId
-
-    this.quizEditorData._id = quizId || ''
-    this.quizEditorData.front = ''
-    this.quizEditorData.back = ''
-    this.quizEditorData.mnemonic = ''
-
-    if (quizId) {
-      const quizData = this.quizData[quizId]
-      if (quizData) {
-        this.quizEditorData.front = quizData.front || ''
-        this.quizEditorData.back = quizData.back || ''
-        this.quizEditorData.mnemonic = quizData.mnemonic || ''
-      }
-    }
-
-    this.isEditModal = true
-  }
-
-  onEditTabChange(i: number) {
-    this.$nextTick(() => {
-      ;(this.$refs[`mde${i}`] as any).codemirror.refresh()
-    })
-  }
-
   onQuizKeypress(evt: KeyboardEvent) {
     if (!this.isQuizModal) {
       return
     }
 
-    if (this.isEditModal || this.isEditTagModal) {
+    if (this.isEditTagModal) {
       return
     }
 
@@ -1107,10 +1643,10 @@ export default class QuizPage extends Vue {
       this.tablePagedData = this.tableAllData
         .slice((this.page - 1) * this.perPage, this.page * this.perPage)
         .map((q) => {
-          const d = this.quizData[q._id]
+          const d = this.quizData[q.id]
 
           return {
-            quizId: q._id,
+            quizId: q.id,
             type: d.type,
             entry: d.entry,
             direction: d.direction,
@@ -1132,18 +1668,18 @@ export default class QuizPage extends Vue {
 
         const { result } = (await this.$axios.$post('/api/quiz/ids', {
           ids: quizIds,
-          select: ['_id', 'tag'],
+          select: ['id', 'tag'],
         })) as {
           result: {
-            _id: string
+            id: string
             tag?: string[]
           }[]
         }
 
-        result.map(({ _id, ..._meta }) => {
-          if (this.quizData[_id]) {
-            this.quizData[_id]._meta = _meta
-            this.$set(this.quizData[_id], '_meta', _meta)
+        result.map(({ id, ..._meta }) => {
+          if (this.quizData[id]) {
+            this.quizData[id]._meta = _meta
+            this.$set(this.quizData[id], '_meta', _meta)
           }
         })
       }

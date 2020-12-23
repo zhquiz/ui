@@ -1,5 +1,5 @@
 <template>
-  <b-loading v-if="!isAuthReady" active />
+  <b-loading v-if="!store.state.isAuthReady" active />
   <section v-else class="IndexPage">
     <client-only>
       <article>
@@ -50,11 +50,7 @@
 import { Component, Vue } from 'nuxt-property-decorator'
 
 @Component
-export default class IndexPage extends Vue {
-  get isAuthReady() {
-    return this.$accessor.isAuthReady
-  }
-}
+export default class IndexPage extends Vue {}
 </script>
 
 <style scoped>

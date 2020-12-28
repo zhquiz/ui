@@ -1,5 +1,5 @@
 <template>
-  <b-loading v-if="!store.state.isAuthReady" active />
+  <b-loading v-if="!$store.state.isAuthReady" active />
   <section v-else class="IndexPage">
     <client-only>
       <article>
@@ -65,9 +65,9 @@ export default class IndexPage extends Vue {}
   width: calc(100vw - 1rem);
 }
 
-@media (min-width: 769px) {
+@media (min-width: 800px) {
   .IndexPage article {
-    max-width: 60vw;
+    max-width: 800px;
   }
 }
 

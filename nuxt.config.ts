@@ -43,12 +43,14 @@ export default (): NuxtConfig => {
      ** https://nuxtjs.org/guide/plugins
      */
     plugins: [
+      // Firebase must be run first
+      '~/plugins/firebase-auth.client.ts',
+
       '~/plugins/axios-loading.client.ts',
       '~/plugins/axios-nuxt.ts',
       '~/plugins/axios-query.ts',
       '~/plugins/codemirror.client.js',
       '~/plugins/filter.ts',
-      '~/plugins/firebase-auth.client.ts',
       '~/plugins/plausible.client.js',
       '~/plugins/vue-context.client.js',
       '~/plugins/webcomponents.client.ts',
@@ -123,6 +125,8 @@ export default (): NuxtConfig => {
     ],
     proxy: {
       '/api/': `http://localhost:${process.env.SERVER_PORT}`,
+      '/media/': `http://localhost:${process.env.SERVER_PORT}`,
+      '/firebase/config.json': `http://localhost:${process.env.SERVER_PORT}`,
     },
     pwa: {
       meta: {
@@ -135,6 +139,11 @@ export default (): NuxtConfig => {
      */
     build: {
       transpile: [/typed-vuex/],
+      extend(config) {
+        if (!config.externals) {
+          config.externals = ['fs']
+        }
+      },
     },
   }
 }

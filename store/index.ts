@@ -1,6 +1,5 @@
-import { actionTree, getAccessorType, mutationTree } from 'nuxt-typed-vuex'
-
 import firebase from 'firebase/app'
+import { actionTree, getAccessorType, mutationTree } from 'nuxt-typed-vuex'
 
 export const state = () => ({
   isAuthReady: false,

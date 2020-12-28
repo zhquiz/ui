@@ -3,13 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "nuxt-ts",
-    "build": "nuxt-ts build",
-    "start": "nuxt-ts start",
-    "generate": "nuxt-ts generate",
+    "dev": "SERVER_PORT=5000 concurrently 'cd ../server && robo dev' nuxt-ts",
+    "build": "nuxt-ts generate",
     "lint": "eslint --ext .ts,.js,.vue --ignore-path .gitignore ."
   },
   "dependencies": {
+    "@fortawesome/free-brands-svg-icons": "^5.15.1",
+    "@fortawesome/free-solid-svg-icons": "^5.15.1",
     "@nuxt/typescript-runtime": "^2.0.0",
     "@nuxtjs/axios": "^5.12.2",
     "@nuxtjs/pwa": "^3.0.2",
@@ -25,6 +25,7 @@
     "nuxt-property-decorator": "^2.8.8",
     "nuxt-typed-vuex": "^0.1.22",
     "showdown": "^1.9.1",
+    "vue-codemirror": "^4.0.6",
     "vue-context": "^6.0.0",
     "xregexp": "^4.4.1"
   },

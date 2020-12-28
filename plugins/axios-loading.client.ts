@@ -1,10 +1,13 @@
+import 'firebase/auth'
+
 import { Plugin } from '@nuxt/types'
 import {
   LoadingProgrammatic as Loading,
   SnackbarProgrammatic as Snackbar,
 } from 'buefy'
+import firebase from 'firebase/app'
 
-const onInit: Plugin = ({ $axios, app }) => {
+const onInit: Plugin = async ({ $axios }) => {
   let loading: {
     close(): any
     requestEnded?: boolean
@@ -37,7 +40,7 @@ const onInit: Plugin = ({ $axios, app }) => {
   })
 
   $axios.interceptors.request.use(async (config) => {
-    const { currentUser } = app.$fireAuth
+    const { currentUser } = firebase.auth()
 
     config.headers = Object.assign(config.headers || {}, {
       Authorization: currentUser

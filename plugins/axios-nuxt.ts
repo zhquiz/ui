@@ -6,27 +6,17 @@ const plugin: Plugin = ({ $axios, error }) => {
 
   $axios.defaults.baseURL = location.origin
 
-  $axios.interceptors.response.use(
-    (r) => {
-      if (r.data?.error) {
-        error({
-          statusCode: r.status,
-          message: r.data.error,
-        })
-        throw new Error(r.data.error)
-      }
-
-      return r
-    },
-    (err) => {
+  $axios.interceptors.response.use((r) => {
+    if (r.data?.error) {
       error({
-        statusCode: err.response.status,
-        message: err.toJSON(),
+        statusCode: r.status,
+        message: r.data.error,
       })
-
-      return Promise.reject(err)
+      throw new Error(r.data.error)
     }
-  )
+
+    return r
+  })
 }
 
 export default plugin

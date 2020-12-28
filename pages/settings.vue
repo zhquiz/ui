@@ -102,7 +102,7 @@ export default class SettingsPage extends Vue {
   readonly lvRange = [1, 60]
 
   get email() {
-    return this.$accessor.user?.email || null
+    return this.$accessor.user || null
   }
 
   created() {

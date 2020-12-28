@@ -6,7 +6,9 @@
         <div class="content">
           <h1>ZhQuiz - A Chinese quizzing app</h1>
 
-          <div id="cotter-form-container" />
+          <center>
+            <div id="cotter-form-container" />
+          </center>
 
           <h4>
             So, you want to learn Chinese. Let's see. How much you can read?
@@ -46,15 +48,19 @@ import { Component, Vue } from 'nuxt-property-decorator'
 import { cotter } from '~/service/auth'
 
 @Component<IndexPage>({
-  mounted() {
-    if (cotter) {
-      cotter
-        .signInWithLink()
-        .showEmailForm()
-        .then(() => {
-          this.$router.push('/random')
-        })
-    }
+  watch: {
+    '$store.state.isAuthReady'() {
+      this.$nextTick(() => {
+        if (cotter && this.$el.querySelector('#cotter-form-container')) {
+          cotter
+            .signInWithLink()
+            .showEmailForm()
+            .then(() => {
+              this.$router.push('/random')
+            })
+        }
+      })
+    },
   },
 })
 export default class IndexPage extends Vue {}
@@ -76,6 +82,11 @@ export default class IndexPage extends Vue {}
   .IndexPage article {
     max-width: 800px;
   }
+}
+
+#cotter-form-container {
+  width: 400px;
+  height: 250px;
 }
 
 .content button {

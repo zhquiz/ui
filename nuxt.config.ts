@@ -43,10 +43,6 @@ export default (): NuxtConfig => {
      ** https://nuxtjs.org/guide/plugins
      */
     plugins: [
-      // Auth must be run first
-      '~/plugins/auth.client.ts',
-
-      '~/plugins/axios-loading.client.ts',
       '~/plugins/axios-nuxt.ts',
       '~/plugins/axios-query.ts',
       '~/plugins/codemirror.client.js',
@@ -54,6 +50,9 @@ export default (): NuxtConfig => {
       '~/plugins/plausible.client.js',
       '~/plugins/vue-context.client.js',
       '~/plugins/webcomponents.client.ts',
+
+      '~/plugins/auth.client.ts',
+      '~/plugins/axios-loading.client.ts',
     ],
     /*
      ** Auto import components

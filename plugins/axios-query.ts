@@ -25,6 +25,8 @@ const onInit: Plugin = ({ $axios }) => {
 export default onInit
 
 function encodeURIMin(s: string) {
+  s = (s || '').toString()
+
   const re = /(?![\x20-\x7F])[!,]/g
   const segs = s.match(re)
   if (segs) {

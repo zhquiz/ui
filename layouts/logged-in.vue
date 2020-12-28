@@ -1,5 +1,5 @@
 <template>
-  <b-loading v-if="!(store.state.isAuthReady && store.state.user)" active />
+  <b-loading v-if="!($store.state.isAuthReady && $store.state.user)" active />
   <section v-else class="AppLayout">
     <nav class="vertical-nav">
       <div class="icon-nav">

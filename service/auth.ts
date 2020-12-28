@@ -9,13 +9,18 @@ export function setCotter(c: Cotter) {
 
 export async function getCotterConfig() {
   if (cotter) {
-    const token = await cotter.tokenHandler.getAccessToken()
+    try {
+      const token = await cotter.tokenHandler.getAccessToken()
 
-    if (token) {
-      return {
-        Authorization: `Bearer ${token.token}`,
-        'X-User': cotter.getLoggedInUser().identifier,
+      if (token) {
+        return {
+          Authorization: `Bearer ${token.token}`,
+          'X-User': cotter.getLoggedInUser().identifier,
+        }
       }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e)
     }
   }
 

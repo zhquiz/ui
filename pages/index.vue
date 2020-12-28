@@ -6,12 +6,7 @@
         <div class="content">
           <h1>ZhQuiz - A Chinese quizzing app</h1>
 
-          <button class="button is-info" @click="doLogin" @keypress="doLogin">
-            <span>
-              <fontawesome :icon="['fab', 'google']" />
-            </span>
-            <span>Login with Google</span>
-          </button>
+          <div id="cotter-form-container" />
 
           <h4>
             So, you want to learn Chinese. Let's see. How much you can read?
@@ -48,8 +43,20 @@
 
 <script lang="ts">
 import { Component, Vue } from 'nuxt-property-decorator'
+import { cotter } from '~/service/auth'
 
-@Component
+@Component<IndexPage>({
+  mounted() {
+    if (cotter) {
+      cotter
+        .signInWithLink()
+        .showEmailForm()
+        .then(() => {
+          this.$router.push('/random')
+        })
+    }
+  },
+})
 export default class IndexPage extends Vue {}
 </script>
 

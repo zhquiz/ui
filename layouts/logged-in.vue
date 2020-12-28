@@ -30,14 +30,7 @@
       <div class="icon-nav">
         <b-tooltip label="Click to logout">
           <a class="w-full" @click="doLogout" @keypress="doLogout">
-            <figure class="image is-48x48">
-              <img
-                class="is-rounded"
-                :src="getGravatarUrl()"
-                :alt="getUserName()"
-              />
-            </figure>
-            <span>{{ getUserName() }}</span>
+            <center>{{ getUserName() }}</center>
           </a>
         </b-tooltip>
       </div>
@@ -96,10 +89,8 @@
 </template>
 
 <script lang="ts">
-import 'firebase/auth'
-
-import firebase from 'firebase/app'
 import { Component, Vue } from 'nuxt-property-decorator'
+import { cotter } from '~/service/auth'
 
 @Component
 export default class AppLayout extends Vue {
@@ -158,28 +149,14 @@ export default class AppLayout extends Vue {
     return level ? level.toString() : ' '
   }
 
-  getGravatarUrl() {
-    const { user } = this.$accessor
-
-    if (user) {
-      return user.photoURL || '/svg/user-svgrepo-com.svg'
-    }
-
-    return '/svg/user-svgrepo-com.svg'
-  }
-
   getUserName() {
-    const { user } = this.$accessor
-
-    if (user) {
-      return user.displayName || (user as any).name
-    }
-
-    return ''
+    return this.$accessor.user || ''
   }
 
-  doLogout() {
-    return firebase.auth().signOut()
+  async doLogout() {
+    if (cotter) {
+      await cotter.logOut()
+    }
   }
 }
 </script>

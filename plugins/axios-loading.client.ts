@@ -1,13 +1,11 @@
-import 'firebase/auth'
-
 import { Plugin } from '@nuxt/types'
+import { cotter, getCotterConfig } from '~/service/auth'
 import {
   LoadingProgrammatic as Loading,
   SnackbarProgrammatic as Snackbar,
 } from 'buefy'
-import firebase from 'firebase/app'
 
-const onInit: Plugin = async ({ $axios }) => {
+const onInit: Plugin = async ({ $axios, app }) => {
   let loading: {
     close(): any
     requestEnded?: boolean
@@ -40,13 +38,16 @@ const onInit: Plugin = async ({ $axios }) => {
   })
 
   $axios.interceptors.request.use(async (config) => {
-    const { currentUser } = firebase.auth()
+    if (cotter) {
+      const cfg = await getCotterConfig()
+      config.headers = Object.assign(config.headers || {}, cfg)
 
-    config.headers = Object.assign(config.headers || {}, {
-      Authorization: currentUser
-        ? `Bearer ${await currentUser.getIdToken()}`
-        : undefined,
-    })
+      try {
+        app.$accessor.updateUser(cfg['X-User'] || null)
+      } catch (_) {
+        app.$accessor.updateUser(null)
+      }
+    }
 
     return config
   })
@@ -79,8 +80,16 @@ const onInit: Plugin = async ({ $axios }) => {
 
       // eslint-disable-next-line no-console
       console.error(err)
-
       Snackbar.open(err.message)
+
+      const { status } = err.response || {}
+
+      if (app.router && (status === 401 || status === 403)) {
+        app.router.push('/')
+
+        return {}
+      }
+
       return err
     }
   )

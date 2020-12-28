@@ -1,9 +1,8 @@
-import firebase from 'firebase/app'
 import { actionTree, getAccessorType, mutationTree } from 'nuxt-typed-vuex'
 
 export const state = () => ({
   isAuthReady: false,
-  user: null as firebase.User | null,
+  user: null as string | null,
   /**
    * This is necessary for layout display
    */
@@ -14,7 +13,7 @@ export const state = () => ({
 export type RootState = ReturnType<typeof state>
 
 export const mutations = mutationTree(state, {
-  SET_USER(state, user: firebase.User | null) {
+  SET_USER(state, user: string | null) {
     state.isAuthReady = true
     state.user = JSON.parse(JSON.stringify(user))
   },
@@ -33,7 +32,7 @@ export const mutations = mutationTree(state, {
 export const actions = actionTree(
   { state, mutations },
   {
-    async updateUser({ commit }, user: firebase.User | null) {
+    async updateUser({ commit }, user: string | null) {
       if (user) {
         const { level = 1, levelMin = 1 } = await this.$axios.$get(
           '/api/user/',

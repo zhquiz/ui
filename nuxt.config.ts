@@ -43,8 +43,8 @@ export default (): NuxtConfig => {
      ** https://nuxtjs.org/guide/plugins
      */
     plugins: [
-      // Firebase must be run first
-      '~/plugins/firebase-auth.client.ts',
+      // Auth must be run first
+      '~/plugins/auth.client.ts',
 
       '~/plugins/axios-loading.client.ts',
       '~/plugins/axios-nuxt.ts',
@@ -126,7 +126,7 @@ export default (): NuxtConfig => {
     proxy: {
       '/api/': `http://localhost:${process.env.SERVER_PORT}`,
       '/media/': `http://localhost:${process.env.SERVER_PORT}`,
-      '/firebase/config.json': `http://localhost:${process.env.SERVER_PORT}`,
+      '/server/': `http://localhost:${process.env.SERVER_PORT}`,
     },
     pwa: {
       meta: {

@@ -1,45 +1,43 @@
 <template>
   <b-loading v-if="!$store.state.isAuthReady" active />
   <section v-else class="IndexPage">
-    <client-only>
-      <article>
-        <div class="content">
-          <h1>ZhQuiz - A Chinese quizzing app</h1>
+    <article>
+      <div class="content">
+        <h1>ZhQuiz - A Chinese quizzing app</h1>
 
-          <center>
-            <div id="cotter-form-container" />
-          </center>
+        <center>
+          <div id="cotter-form-container" />
+        </center>
 
-          <h4>
-            So, you want to learn Chinese. Let's see. How much you can read?
-          </h4>
+        <h4>
+          So, you want to learn Chinese. Let's see. How much you can read?
+        </h4>
 
-          <figure class="image is-16by9">
-            <iframe
-              title="video-demo"
-              class="has-ratio"
-              src="https://www.youtube.com/embed/iomE0xiYoqY"
-              frameborder="0"
-              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-            />
-          </figure>
+        <figure class="image is-16by9">
+          <iframe
+            title="video-demo"
+            class="has-ratio"
+            src="https://www.youtube.com/embed/iomE0xiYoqY"
+            frameborder="0"
+            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          />
+        </figure>
 
-          <h2>Features</h2>
+        <h2>Features</h2>
 
-          <ul>
-            <li>HSK vocabularies made into 60 levels</li>
-            <li>Flashcards showing statuses of success</li>
-            <li>Custom vocabularies input by users</li>
-            <li>Speech-enabled</li>
-          </ul>
+        <ul>
+          <li>HSK vocabularies made into 60 levels</li>
+          <li>Flashcards showing statuses of success</li>
+          <li>Custom vocabularies input by users</li>
+          <li>Speech-enabled</li>
+        </ul>
 
-          <h4>Login to try now.</h4>
-        </div>
-      </article>
+        <h4>Login to try now.</h4>
+      </div>
+    </article>
 
-      <div class="background" />
-    </client-only>
+    <div class="background" />
   </section>
 </template>
 
@@ -51,29 +49,36 @@ import { cotter, getCotterConfig } from '~/service/auth'
   watch: {
     '$store.state.isAuthReady'() {
       this.$nextTick(() => {
-        if (cotter && this.$el.querySelector('#cotter-form-container')) {
-          cotter
-            .signInWithLink()
-            .showEmailForm()
-            .then(async () => {
-              const config = await getCotterConfig()
-              this.$axios.defaults.headers = Object.assign(
-                this.$axios.defaults.headers,
-                config
-              )
-              this.$accessor.updateUser(config['X-User'] || null)
-              this.$router.push('/random')
-
-              try {
-                cotter!.removeForm()
-              } catch (_) {}
-            })
-        }
+        this.showCotterForm()
       })
     },
   },
+  mounted() {
+    this.showCotterForm()
+  },
 })
-export default class IndexPage extends Vue {}
+export default class IndexPage extends Vue {
+  showCotterForm() {
+    if (cotter && this.$el.querySelector('#cotter-form-container')) {
+      cotter
+        .signInWithLink()
+        .showEmailForm()
+        .then(async () => {
+          const config = await getCotterConfig()
+          this.$axios.defaults.headers = Object.assign(
+            this.$axios.defaults.headers,
+            config
+          )
+          this.$accessor.updateUser(config['X-User'] || null)
+          this.$router.push('/random')
+
+          try {
+            cotter!.removeForm()
+          } catch (_) {}
+        })
+    }
+  }
+}
 </script>
 
 <style scoped>

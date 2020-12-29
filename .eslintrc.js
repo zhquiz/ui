@@ -18,5 +18,6 @@ module.exports = {
     'require-await': 0,
     'import/order': 0,
     'no-lonely-if': 0,
+    'no-use-before-define': 0,
   },
 }

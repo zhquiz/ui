@@ -207,29 +207,33 @@
           >
             <template slot-scope="props">
               <b-table-column field="type" label="Type" width="100" sortable>
-                {{ props.row.type }}
+                {{ (props.row || {}).type }}
               </b-table-column>
               <b-table-column field="entry" label="Entry" sortable>
-                {{ props.row.entry }}
+                {{ (props.row || {}).entry }}
               </b-table-column>
               <b-table-column field="direction" label="Direction" sortable>
-                <span v-if="props.row.direction === 'ec'">English-Chinese</span>
-                <span v-else-if="props.row.direction === 'te'">
+                <span v-if="(props.row || {}).direction === 'ec'">
+                  English-Chinese
+                </span>
+                <span v-else-if="(props.row || {}).direction === 'te'">
                   Traditional-English
                 </span>
-                <span v-else-if="props.row.type === 'vocab'">
+                <span v-else-if="(props.row || {}).type === 'vocab'">
                   Simplified-English
                 </span>
                 <span v-else>Chinese-English</span>
               </b-table-column>
               <b-table-column field="tag" label="Tag">
-                <b-tag v-for="t in props.row.tag || []" :key="t">{{ t }}</b-tag>
+                <b-tag v-for="t in (props.row || {}).tag || []" :key="t">
+                  {{ t }}
+                </b-tag>
               </b-table-column>
               <b-table-column field="srsLevel" label="SRS Level" sortable>
-                {{ props.row.srsLevel }}
+                {{ (props.row || {}).srsLevel }}
               </b-table-column>
               <b-table-column field="nextReview" label="Next Review" sortable>
-                {{ props.row.nextReview | formatDate }}
+                {{ (props.row || {}).nextReview | formatDate }}
               </b-table-column>
             </template>
           </b-table>
@@ -423,7 +427,7 @@ interface ITableRow {
 }
 
 @Component<QuizPage>({
-  layout: 'app',
+  layout: 'logged-in',
   created() {
     this.init().then(() => {
       this.isQuizDashboardReady = true
@@ -679,7 +683,7 @@ export default class QuizPage extends Vue {
           } = {},
         } = await this.$axios.$get('/api/user', {
           params: {
-            select: ['settings.quiz'],
+            select: ['quiz'],
           },
         })
 
@@ -701,7 +705,7 @@ export default class QuizPage extends Vue {
         // eslint-disable-next-line no-console
       })().catch(console.error),
       (async () => {
-        const { tags = [] } = await this.$axios.$get('/api/quiz/tag/all')
+        const { tags = [] } = await this.$axios.$get('/api/quiz/allTags')
         this.allTags = tags
 
         // eslint-disable-next-line no-console
@@ -719,16 +723,19 @@ export default class QuizPage extends Vue {
       '/api/quiz/init',
       {
         params: {
-          type: this.type,
-          stage: this.stage,
-          direction: this.direction,
-          isDue: this.isDue,
-          tag: this.selectedTags.length > 0 ? this.selectedTags : undefined,
+          _: {
+            type: this.type,
+            stage: this.stage,
+            direction: this.direction,
+            isDue: this.isDue,
+            tag: this.selectedTags,
+          },
         },
       }
     )
 
     this.quizArray = []
+    // eslint-disable-next-line array-callback-return
     quiz.map(({ id, nextReview, srsLevel, stat }: any) => {
       this.quizArray.push(id)
       this.quizData[id] = { id, nextReview, srsLevel, stat }
@@ -820,6 +827,7 @@ export default class QuizPage extends Vue {
 
     Array(2)
       .fill(null)
+      // eslint-disable-next-line array-callback-return
       .map((_, i) => {
         const front = this.templateRender('front', i + 1)
         // const back = this.templateRender('back', i + 1)
@@ -870,6 +878,7 @@ export default class QuizPage extends Vue {
 
     if (!data) {
       const mask = (s: string, ...ws: string[]) => {
+        // eslint-disable-next-line array-callback-return
         ws.map((w) => {
           s = s.replace(
             new RegExp(
@@ -1676,6 +1685,7 @@ export default class QuizPage extends Vue {
           }[]
         }
 
+        // eslint-disable-next-line array-callback-return
         result.map(({ id, ..._meta }) => {
           if (this.quizData[id]) {
             this.quizData[id]._meta = _meta

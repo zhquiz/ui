@@ -139,9 +139,11 @@ export default (): NuxtConfig => {
     build: {
       transpile: [/typed-vuex/],
       extend(config) {
-        if (!config.externals) {
-          config.externals = ['fs']
+        if (!config.node) {
+          config.node = {}
         }
+
+        config.node.fs = 'empty'
       },
     },
   }

@@ -328,8 +328,6 @@ export default class RandomPage extends Vue {
         }
       )
 
-      console.log(result)
-
       this.hanzi.item = result
       this.hanzi.english = english
     }

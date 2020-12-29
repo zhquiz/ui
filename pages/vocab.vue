@@ -53,9 +53,9 @@
                 <fontawesome icon="caret-down" />
               </button>
 
-              <b-dropdown-entry aria-role="listitem">
+              <b-dropdown-item aria-role="listitem">
                 Search in MDBG
-              </b-dropdown-entry>
+              </b-dropdown-item>
             </b-dropdown>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { logOut } from '~/service/auth'
 import { actionTree, getAccessorType, mutationTree } from 'nuxt-typed-vuex'
 
 export const state = () => ({
@@ -33,22 +34,30 @@ export const actions = actionTree(
   { state, mutations },
   {
     async updateUser({ commit }, user: string | null) {
-      if (user) {
-        const { level = 1, levelMin = 1 } = await this.$axios.$get(
-          '/api/user/',
-          {
+      let r: any
+
+      try {
+        if (user) {
+          r = await this.$axios.$get('/api/user/', {
             params: {
               select: ['level', 'levelMin'],
             },
-          }
-        )
-        commit('SET_LEVEL', { level, levelMin })
-      } else {
-        await this.$axios.$delete('/api/user/signOut')
-        commit('SET_LEVEL', { levelMin: null, level: null })
+          })
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(e)
       }
 
-      commit('SET_USER', user)
+      if (r) {
+        const { level = 1, levelMin = 1 } = r
+        commit('SET_LEVEL', { level, levelMin })
+        commit('SET_USER', user)
+      } else {
+        await logOut()
+        commit('SET_LEVEL', { levelMin: null, level: null })
+        commit('SET_USER', null)
+      }
     },
   }
 )

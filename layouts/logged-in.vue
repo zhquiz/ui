@@ -30,7 +30,7 @@
       <div class="icon-nav">
         <b-tooltip label="Click to logout">
           <a class="w-full" @click="doLogout" @keypress="doLogout">
-            <center>{{ getUserName() }}</center>
+            <div class="login-banner">{{ getUserName() }}</div>
           </a>
         </b-tooltip>
       </div>
@@ -90,7 +90,7 @@
 
 <script lang="ts">
 import { Component, Vue } from 'nuxt-property-decorator'
-import { cotter } from '~/service/auth'
+import { logOut } from '~/service/auth'
 
 @Component
 export default class AppLayout extends Vue {
@@ -154,9 +154,7 @@ export default class AppLayout extends Vue {
   }
 
   async doLogout() {
-    if (cotter) {
-      await cotter.logOut()
-    }
+    await logOut(this.$router)
   }
 }
 </script>
@@ -223,6 +221,12 @@ export default class AppLayout extends Vue {
 .icon-nav:last-child figure {
   margin-left: 0.5rem;
   margin-right: 1rem;
+}
+
+.login-banner {
+  height: 3em;
+  width: 100%;
+  text-align: center;
 }
 
 .main-nav {

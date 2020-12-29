@@ -1,4 +1,5 @@
 import Cotter from 'cotter'
+import VueRouter from 'vue-router'
 
 // eslint-disable-next-line import/no-mutable-exports
 export let cotter: Cotter | null = null
@@ -27,5 +28,17 @@ export async function getCotterConfig() {
   return {
     Authorization: undefined,
     'X-User': undefined,
+  }
+}
+
+export async function logOut(router?: VueRouter) {
+  if (cotter) {
+    await cotter.logOut()
+  }
+
+  await fetch('/api/user/signOut', { method: 'DELETE' })
+
+  if (router && router.currentRoute.path !== '/') {
+    router.push('/')
   }
 }

@@ -45,7 +45,7 @@
 
 <script lang="ts">
 import { Component, Vue } from 'nuxt-property-decorator'
-import { cotter } from '~/service/auth'
+import { cotter, getCotterConfig } from '~/service/auth'
 
 @Component<IndexPage>({
   watch: {
@@ -55,8 +55,18 @@ import { cotter } from '~/service/auth'
           cotter
             .signInWithLink()
             .showEmailForm()
-            .then(() => {
+            .then(async () => {
+              const config = await getCotterConfig()
+              this.$axios.defaults.headers = Object.assign(
+                this.$axios.defaults.headers,
+                config
+              )
+              this.$accessor.updateUser(config['X-User'] || null)
               this.$router.push('/random')
+
+              try {
+                cotter!.removeForm()
+              } catch (_) {}
             })
         }
       })

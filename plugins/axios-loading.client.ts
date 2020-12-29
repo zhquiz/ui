@@ -1,5 +1,5 @@
 import { Plugin } from '@nuxt/types'
-import { cotter, getCotterConfig } from '~/service/auth'
+import { cotter, getCotterConfig, logOut } from '~/service/auth'
 import {
   LoadingProgrammatic as Loading,
   SnackbarProgrammatic as Snackbar,
@@ -41,12 +41,6 @@ const onInit: Plugin = async ({ $axios, app }) => {
     if (cotter) {
       const cfg = await getCotterConfig()
       config.headers = Object.assign(config.headers || {}, cfg)
-
-      try {
-        app.$accessor.updateUser(cfg['X-User'] || null)
-      } catch (_) {
-        app.$accessor.updateUser(null)
-      }
     }
 
     return config
@@ -67,7 +61,7 @@ const onInit: Plugin = async ({ $axios, app }) => {
 
       return config
     },
-    (err) => {
+    async (err) => {
       if (loading) {
         loading.close()
         loading = null
@@ -84,9 +78,8 @@ const onInit: Plugin = async ({ $axios, app }) => {
 
       const { status } = err.response || {}
 
-      if (app.router && (status === 401 || status === 403)) {
-        app.router.push('/')
-
+      if (status === 401 || status === 403) {
+        await logOut(app.router)
         return {}
       }
 

@@ -2,7 +2,7 @@
   <b-loading v-if="!($store.state.isAuthReady && $store.state.user)" active />
   <section v-else class="AppLayout">
     <nav class="vertical-nav">
-      <div class="icon-nav">
+      <div class="icon-nav" style="overflow-y: scroll">
         <component
           :is="nav.to ? 'router-link' : 'a'"
           v-for="nav in navItems"
@@ -25,14 +25,17 @@
         </component>
       </div>
 
-      <div class="flex-grow" />
-
       <div class="icon-nav">
-        <b-tooltip label="Click to logout">
-          <a class="w-full" @click="doLogout" @keypress="doLogout">
-            <div class="login-banner">{{ getUserName() }}</div>
-          </a>
-        </b-tooltip>
+        <div class="login-banner">
+          <div>Signed in as {{ getUserName() }}</div>
+          <button
+            class="button is-danger"
+            @click="doLogout"
+            @keypress="doLogout"
+          >
+            Logout
+          </button>
+        </div>
       </div>
     </nav>
 
@@ -138,7 +141,7 @@ export default class AppLayout extends Vue {
       },
       {
         name: 'About',
-        href: 'https://github.com/patarapolw/zhquiz',
+        href: 'https://github.com/zhquiz/zhquiz',
         icon: ['fab', 'github'],
       },
     ]
@@ -159,7 +162,7 @@ export default class AppLayout extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .AppLayout {
   display: flex;
   width: 100vw;
@@ -168,11 +171,11 @@ export default class AppLayout extends Vue {
 }
 
 .vertical-nav {
-  display: none;
+  display: grid;
+  grid-template-rows: 1fr 4rem;
+
   overflow: scroll;
   z-index: 10;
-  display: flex;
-  flex-direction: column;
   width: 300px;
   min-width: 300px;
   max-height: 100vh;
@@ -195,17 +198,23 @@ export default class AppLayout extends Vue {
   align-self: center;
 }
 
+.vertical-nav,
+.icon-nav {
+  scrollbar-width: none; /* For Firefox */
+  -ms-overflow-style: none; /* For Internet Explorer and Edge */
+
+  &::-webkit-scrollbar {
+    width: 0px; /* For Chrome, Safari, and Opera */
+  }
+}
+
 .icon-nav {
   display: flex;
   flex-direction: column;
 }
 
 .icon-nav:first-child {
-  margin-top: 1rem;
-}
-
-.icon-nav:last-child {
-  margin-bottom: 0.5rem;
+  padding-top: 1rem;
 }
 
 .icon-nav a {
@@ -223,10 +232,20 @@ export default class AppLayout extends Vue {
   margin-right: 1rem;
 }
 
-.login-banner {
-  height: 3em;
+.b-tooltip {
   width: 100%;
-  text-align: center;
+  height: 100%;
+}
+
+.login-banner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+
+  background-color: rgba(90, 90, 90, 0.2);
 }
 
 .main-nav {
@@ -274,10 +293,6 @@ export default class AppLayout extends Vue {
 @media (min-width: 1025px) {
   .AppLayout {
     flex-direction: row;
-  }
-
-  .vertical-nav {
-    display: flex;
   }
 
   .main-nav {

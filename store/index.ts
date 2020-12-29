@@ -50,8 +50,7 @@ export const actions = actionTree(
       }
 
       if (r) {
-        const { level = 1, levelMin = 1 } = r
-        commit('SET_LEVEL', { level, levelMin })
+        commit('SET_LEVEL', { level: r.level || 1, levelMin: r.levelMin || 1 })
         commit('SET_USER', user)
       } else {
         await logOut()

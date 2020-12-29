@@ -19,7 +19,7 @@ const onInit: Plugin = async ({ $axios, app, route }) => {
 
     const config = await getCotterConfig()
     $axios.defaults.headers = Object.assign($axios.defaults.headers, config)
-    app.$accessor.updateUser(config['X-User'] || null)
+    await app.$accessor.updateUser(config['X-User'] || null)
 
     window.onNuxtReady(() => {
       if (app.$accessor.user) {

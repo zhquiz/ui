@@ -398,40 +398,40 @@ export default class VocabPage extends Vue {
 
   async loadVocabStatus() {
     if (this.selectedVocab) {
-      const { result } = await this.$axios.$get('/api/quiz/entry', {
+      const { result } = await this.$axios.$get('/api/quiz/many', {
         params: {
-          entry: this.selectedVocab,
+          entries: [this.selectedVocab],
           type: 'vocab',
-          select: ['_id'],
+          select: ['id'],
         },
       })
       this.$set(
         this.vocabIds,
         this.selectedVocab,
-        result.map((d: any) => d._id)
+        result.map((d: any) => d.id)
       )
     }
   }
 
   async loadSentenceStatus() {
     if (this.selectedSentence) {
-      const { result } = await this.$axios.$get('/api/quiz/entry', {
+      const { result } = await this.$axios.$get('/api/quiz/many', {
         params: {
-          entry: this.selectedSentence,
+          entries: [this.selectedSentence],
           type: 'sentence',
-          select: ['_id'],
+          select: ['id'],
         },
       })
       this.$set(
         this.sentenceIds,
         this.selectedSentence,
-        result.map((d: any) => d._id)
+        result.map((d: any) => d.id)
       )
     }
   }
 
   async addToQuiz(entry: string, type: string) {
-    await this.$axios.$put('/api/quiz/', { entry, type })
+    await this.$axios.$put('/api/quiz/', { entries: [entry], type })
     this.$buefy.snackbar.open(`Added ${type}: ${entry} to quiz`)
 
     type === 'vocab' ? this.loadVocabStatus() : this.loadSentenceStatus()

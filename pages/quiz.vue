@@ -1027,7 +1027,7 @@ export default class QuizPage extends Vue {
               }[]
             }>('/api/sentence/q', {
               params: {
-                entry,
+                q: entry,
                 select: 'id,chinese,english',
               },
             })
@@ -1421,7 +1421,7 @@ export default class QuizPage extends Vue {
               }[]
             }>('/api/sentence/q', {
               params: {
-                entry,
+                q: entry,
                 select: 'id,chinese,english',
               },
             })

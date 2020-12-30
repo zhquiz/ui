@@ -122,7 +122,7 @@ import { Component, Vue } from 'nuxt-property-decorator'
 import { speak } from '~/assets/speak'
 
 interface IExtra {
-  _id?: string
+  id?: string
   chinese: string
   pinyin: string
   english: string
@@ -180,7 +180,7 @@ export default class ExtraPage extends Vue {
         page: this.page,
         perPage: this.perPage,
         sort: [`${this.sort.type === 'desc' ? '-' : ''}${this.sort.key}`],
-        select: ['_id', 'chinese', 'pinyin', 'english'],
+        select: ['id', 'chinese', 'pinyin', 'english'],
       },
     })
 
@@ -190,12 +190,12 @@ export default class ExtraPage extends Vue {
   }
 
   async doCreate() {
-    const { existing, _id } = await this.$axios.$put('/api/extra', this.newItem)
+    const { existing, id } = await this.$axios.$put('/api/extra', this.newItem)
 
-    if (_id) {
+    if (id) {
       this.selected.row = {
         ...this.newItem,
-        _id,
+        id,
       }
       this.$set(this.selected, 'row', this.selected.row)
     }
@@ -207,12 +207,12 @@ export default class ExtraPage extends Vue {
     }
     this.$set(this, 'newItem', this.newItem)
 
-    if (_id) {
+    if (id) {
       await Promise.all([this.load(), this.addToQuiz()])
     } else if (existing) {
       const { type, entry } = existing
       await this.$axios.$put('/api/quiz', {
-        entry,
+        entries: [entry],
         type,
       })
 
@@ -221,10 +221,10 @@ export default class ExtraPage extends Vue {
   }
 
   async doDelete() {
-    if (this.selected.row && this.selected.row._id) {
+    if (this.selected.row && this.selected.row.id) {
       await this.$axios.$delete('/api/extra', {
         params: {
-          id: this.selected.row._id,
+          id: this.selected.row.id,
         },
       })
       await this.load()
@@ -235,15 +235,15 @@ export default class ExtraPage extends Vue {
     evt.preventDefault()
 
     this.selected.row = row
-    const { result } = await this.$axios.$get('/api/quiz/entry', {
+    const { result } = await this.$axios.$get('/api/quiz/many', {
       params: {
-        entry: row.entry,
-        select: ['_id'],
+        entries: [row.entry],
+        select: ['id'],
         type: 'extra',
       },
     })
 
-    this.selected.quizIds = result.map((q: any) => q._id)
+    this.selected.quizIds = result.map((q: any) => q.id)
     this.$set(this.selected, 'quizIds', this.selected.quizIds)
 
     const contextmenu = this.$refs.contextmenu as any
@@ -253,7 +253,7 @@ export default class ExtraPage extends Vue {
   async addToQuiz() {
     if (this.selected.row) {
       await this.$axios.$put('/api/quiz', {
-        entry: this.selected.row.chinese,
+        entries: [this.selected.row.chinese],
         type: 'extra',
       })
 

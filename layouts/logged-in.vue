@@ -107,7 +107,7 @@ export default class AppLayout extends Vue {
       {
         name: 'Quiz',
         to: '/quiz',
-        icon: 'question-circle',
+        icon: 'chalkboard-teacher',
       },
       {
         name: 'Hanzi',
@@ -120,19 +120,19 @@ export default class AppLayout extends Vue {
         character: '词',
       },
       {
-        name: 'Level',
-        to: '/level',
-        text: this.level,
-      },
-      {
         name: 'Extra',
         to: '/extra',
-        icon: 'folder-plus',
+        icon: 'user-edit',
       },
       {
         name: 'Library',
         to: '/library',
-        icon: 'book-open',
+        icon: 'book-reader',
+      },
+      {
+        name: 'Level',
+        to: '/level',
+        text: this.level,
       },
       {
         name: 'Settings',

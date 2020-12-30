@@ -262,10 +262,12 @@ export default class LevelPage extends Vue {
         })
       : this.$axios.$get('/api/vocab/level'))
 
+    // eslint-disable-next-line array-callback-return
     entries.map((entry) => {
       delete this.srsLevel[entry]
     })
 
+    // eslint-disable-next-line array-callback-return
     result.map(({ entry, level, srsLevel }) => {
       if (level) {
         const lv = level.toString()
@@ -302,7 +304,7 @@ export default class LevelPage extends Vue {
       const { result = [] } = await this.$axios.$post('/api/quiz/entries', {
         entries,
         type: 'vocab',
-        select: ['_id'],
+        select: ['id'],
       })
 
       this.selected.cardIds = result
@@ -317,7 +319,7 @@ export default class LevelPage extends Vue {
 
     if (entries.length) {
       await this.$axios.$put('/api/quiz', {
-        entry: entries,
+        entries,
         type: 'vocab',
       })
       this.$buefy.snackbar.open(

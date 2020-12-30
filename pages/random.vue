@@ -369,24 +369,24 @@ export default class RandomPage extends Vue {
   async getQuizStatus(item: any) {
     const vm = this as any
 
-    const { result } = await this.$axios.$get('/api/quiz/entry', {
+    const { result } = await this.$axios.$get('/api/quiz/many', {
       params: {
-        entry: item.item,
+        entries: [item.item],
         type: item.type,
-        select: ['_id'],
+        select: ['id'],
       },
     })
 
     this.$set(
       vm[item.type],
       'id',
-      result.map((el: any) => el._id)
+      result.map((el: any) => el.id)
     )
   }
 
   async addToQuiz(item: any) {
     await this.$axios.$put('/api/quiz/', {
-      entry: item.item,
+      entries: [item.item],
       type: item.type,
     })
 

@@ -511,8 +511,7 @@ export default class HanziPage extends Vue {
   async loadVocab() {
     const { result } = await this.$axios.$get('/api/vocab/q', {
       params: {
-        entry: this.current,
-        limit: -1,
+        q: this.current,
       },
     })
     this.$set(this, 'vocabs', result)
@@ -521,7 +520,7 @@ export default class HanziPage extends Vue {
   async loadSentences() {
     const { result } = await this.$axios.$get('/api/sentence/q', {
       params: {
-        entry: this.current,
+        q: this.current,
       },
     })
     this.$set(this, 'sentences', result)
@@ -529,11 +528,11 @@ export default class HanziPage extends Vue {
 
   async loadHanziStatus() {
     if (this.selectedHanzi) {
-      const { result } = await this.$axios.$get('/api/quiz/entry', {
+      const { result } = await this.$axios.$get('/api/quiz/many', {
         params: {
-          entry: this.selectedHanzi,
+          entries: [this.selectedHanzi],
           type: 'hanzi',
-          select: ['_id'],
+          select: ['id'],
         },
       })
       this.$set(this.hanziIds, this.selectedHanzi, !!result.length)
@@ -542,11 +541,11 @@ export default class HanziPage extends Vue {
 
   async loadVocabStatus() {
     if (this.selectedVocab) {
-      const { result } = await this.$axios.$get('/api/quiz/entry', {
+      const { result } = await this.$axios.$get('/api/quiz/many', {
         params: {
-          entry: this.selectedVocab,
+          entries: [this.selectedVocab],
           type: 'vocab',
-          select: ['_id'],
+          select: ['id'],
         },
       })
       this.$set(this.vocabIds, this.selectedVocab, !!result.length)
@@ -555,17 +554,17 @@ export default class HanziPage extends Vue {
 
   async loadSentenceStatus() {
     if (this.selectedSentence) {
-      const { result } = await this.$axios.$get('/api/quiz/entry', {
+      const { result } = await this.$axios.$get('/api/quiz/many', {
         params: {
-          entry: this.selectedSentence,
+          entries: [this.selectedSentence],
           type: 'sentence',
-          select: ['_id'],
+          select: ['id'],
         },
       })
       this.$set(
         this.sentenceIds,
         this.selectedSentence,
-        result.map((d: any) => d._id)
+        result.map((d: any) => d.id)
       )
     }
   }

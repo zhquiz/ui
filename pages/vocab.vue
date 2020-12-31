@@ -375,25 +375,55 @@ export default class VocabPage extends Vue {
   }
 
   async loadContent() {
-    if (typeof this.current === 'string') {
-      const { vocabs, sentences } = (
-        await this.$axios.$get('/api/vocab/match', {
+    const entry = this.current
+
+    if (typeof entry === 'string') {
+      ;(async () => {
+        const { result } = await this.$axios.$get('/api/vocab', {
           params: {
-            entry: this.current,
+            entry,
           },
+          transformResponse: [
+            (r) => {
+              try {
+                return JSON.parse(r)
+              } catch (e) {
+                console.error(r)
+                throw e
+              }
+            },
+          ],
         })
-      ).result
 
-      if (vocabs.length > 0) {
-        this.entries = [
-          ...this.entries.slice(0, this.i),
-          ...vocabs,
-          ...this.entries.slice(this.i + 1),
-        ]
-      }
-
-      this.$set(this, 'sentences', sentences)
+        if (result.length > 0) {
+          this.entries = [
+            ...this.entries.slice(0, this.i),
+            ...result,
+            ...this.entries.slice(this.i + 1),
+          ]
+        }
+      })()
     }
+
+    ;(async () => {
+      const r = await this.$axios.$get('/api/sentence/q', {
+        params: {
+          q: entry.simplified || entry,
+        },
+        transformResponse: [
+          (r) => {
+            try {
+              return JSON.parse(r)
+            } catch (e) {
+              console.error(r)
+              throw e
+            }
+          },
+        ],
+      })
+
+      this.$set(this, 'sentences', r.result)
+    })()
   }
 
   async loadVocabStatus() {

@@ -521,6 +521,7 @@ export default class HanziPage extends Vue {
     const { result } = await this.$axios.$get('/api/sentence/q', {
       params: {
         q: this.current,
+        type: 'hanzi',
       },
     })
 

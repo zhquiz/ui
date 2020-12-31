@@ -400,6 +400,7 @@ export default class VocabPage extends Vue {
       const r = await this.$axios.$get('/api/sentence/q', {
         params: {
           q: entry.simplified || entry,
+          type: 'vocab',
         },
         transformResponse: [(r) => JSON.parse(r)],
       })

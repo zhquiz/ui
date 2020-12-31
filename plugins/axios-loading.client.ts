@@ -12,7 +12,7 @@ const onInit: Plugin = async ({ $axios, app }) => {
   } | null = null
   let requestTimeout: number | null = null
 
-  $axios.interceptors.request.use((config) => {
+  $axios.interceptors.request.use(async (config) => {
     if (!loading) {
       if (requestTimeout) {
         clearTimeout(requestTimeout)
@@ -34,10 +34,6 @@ const onInit: Plugin = async ({ $axios, app }) => {
       }, 1000)
     }
 
-    return config
-  })
-
-  $axios.interceptors.request.use(async (config) => {
     if (cotter) {
       const cfg = await getCotterConfig()
       config.headers = Object.assign(config.headers || {}, cfg)

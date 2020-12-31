@@ -383,16 +383,7 @@ export default class VocabPage extends Vue {
           params: {
             entry,
           },
-          transformResponse: [
-            (r) => {
-              try {
-                return JSON.parse(r)
-              } catch (e) {
-                console.error(r)
-                throw e
-              }
-            },
-          ],
+          transformResponse: [(r) => JSON.parse(r)],
         })
 
         if (result.length > 0) {
@@ -410,16 +401,7 @@ export default class VocabPage extends Vue {
         params: {
           q: entry.simplified || entry,
         },
-        transformResponse: [
-          (r) => {
-            try {
-              return JSON.parse(r)
-            } catch (e) {
-              console.error(r)
-              throw e
-            }
-          },
-        ],
+        transformResponse: [(r) => JSON.parse(r)],
       })
 
       this.$set(this, 'sentences', r.result)

@@ -59,7 +59,7 @@
         </div>
 
         <div class="column is-6">
-          <b-collapse class="card" animation="slide" :open="!!sub">
+          <b-collapse class="card" animation="slide" :open="sub.length">
             <div
               slot="trigger"
               slot-scope="props"
@@ -89,7 +89,7 @@
             </div>
           </b-collapse>
 
-          <b-collapse class="card" animation="slide" :open="!!sup">
+          <b-collapse class="card" animation="slide" :open="sup.length">
             <div
               slot="trigger"
               slot-scope="props"
@@ -119,7 +119,7 @@
             </div>
           </b-collapse>
 
-          <b-collapse class="card" animation="slide" :open="!!variants">
+          <b-collapse class="card" animation="slide" :open="variants.length">
             <div
               slot="trigger"
               slot-scope="props"
@@ -434,9 +434,9 @@ export default class HanziPage extends Vue {
   entries: string[] = []
   i: number = 0
 
-  sub = ''
-  sup = ''
-  variants = ''
+  sub: string[] = []
+  sup: string[] = []
+  variants: string[] = []
   vocabs: any[] = []
   sentences: any[] = []
 
@@ -487,25 +487,24 @@ export default class HanziPage extends Vue {
       this.loadVocab()
       this.loadSentences()
     } else {
-      this.sub = ''
-      this.sup = ''
-      this.variants = ''
+      this.sub = []
+      this.sup = []
+      this.variants = []
       this.vocabs = []
       this.sentences = []
     }
   }
 
   async loadHanzi() {
-    const r = (
-      await this.$axios.$get('/api/hanzi/match', {
-        params: {
-          entry: this.current,
-        },
-      })
-    ).result
-    this.sub = r.sub
-    this.sup = r.sup
-    this.variants = r.variants
+    const r = await this.$axios.$get('/api/hanzi', {
+      params: {
+        entry: this.current,
+      },
+    })
+
+    this.sub = [...r.sub]
+    this.sup = [...r.sup]
+    this.variants = [...r.variants]
   }
 
   async loadVocab() {
@@ -514,6 +513,7 @@ export default class HanziPage extends Vue {
         q: this.current,
       },
     })
+
     this.$set(this, 'vocabs', result)
   }
 
@@ -523,6 +523,7 @@ export default class HanziPage extends Vue {
         q: this.current,
       },
     })
+
     this.$set(this, 'sentences', result)
   }
 

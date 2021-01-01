@@ -586,7 +586,7 @@ export default class HanziPage extends Vue {
   }
 
   async addToQuiz(item: string, type: string) {
-    await this.$axios.$put('/api/quiz/', { item, type })
+    await this.$axios.$put('/api/quiz/', { entries: [item], type })
     this.$buefy.snackbar.open(`Added ${type}: ${item} to quiz`)
 
     type === 'vocab' ? this.loadVocabStatus() : this.loadHanziStatus()

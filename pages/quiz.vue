@@ -873,19 +873,34 @@ export default class QuizPage extends Vue {
 
     let q = this.quizData[quizId]
     if (!q || !q.entry || !q.type || !q.direction) {
-      const r = await this.$axios.$get('/api/quiz', {
+      const {
+        result: [r],
+      } = await this.$axios.$get<{
+        result: IQuizData[]
+      }>('/api/quiz/many', {
         params: {
-          id: quizId,
+          ids: [quizId],
           select: ['entry', 'type', 'direction', 'front', 'back', 'mnemonic'],
         },
       })
-      q = Object.assign(q, r)
 
-      q.id = quizId
-      q.type = q.type as IQuizType
-      q.entry = q.entry as string
+      if (r) {
+        if (q) {
+          Object.assign(q, r)
+        } else {
+          q = r
+        }
 
-      this.$set(this.quizData, quizId, q)
+        q.id = quizId
+        q.type = q.type as IQuizType
+        q.entry = q.entry as string
+
+        this.$set(this.quizData, quizId, q)
+      }
+    }
+
+    if (!q.entry || !q.type || !q.direction) {
+      return
     }
 
     const { entry } = q
@@ -1690,9 +1705,11 @@ export default class QuizPage extends Vue {
           (id) => this.quizData[id] && !this.quizData[id]._meta
         )
 
-        const { result } = (await this.$axios.$post('/api/quiz/ids', {
-          ids: quizIds,
-          select: ['id', 'tag'],
+        const { result } = (await this.$axios.$get('/api/quiz/many', {
+          params: {
+            ids: quizIds,
+            select: ['id', 'tag'],
+          },
         })) as {
           result: {
             id: string

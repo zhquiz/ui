@@ -1,6 +1,19 @@
 <template>
   <section>
     <div class="ExtraPage container">
+      <form class="field" @submit.prevent="q = q0">
+        <div class="control">
+          <input
+            v-model="q0"
+            class="input"
+            type="search"
+            name="q"
+            placeholder="Type here to search."
+            aria-label="search"
+          />
+        </div>
+      </form>
+
       <nav class="new-item-panel">
         <div class="w-full flex-grow">
           <b-field label="Chinese">
@@ -117,7 +130,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'nuxt-property-decorator'
+import { Component, Vue, Watch } from 'nuxt-property-decorator'
 
 import { speak } from '~/assets/speak'
 
@@ -133,13 +146,9 @@ interface IExtra {
   created() {
     this.load()
   },
-  watch: {
-    page() {
-      this.load()
-    },
-  },
 })
 export default class ExtraPage extends Vue {
+  q0 = ''
   count = 0
   perPage = 10
   page = 1
@@ -168,15 +177,28 @@ export default class ExtraPage extends Vue {
     quizIds: [],
   }
 
+  get q() {
+    const q = this.$route.query.q
+    return (Array.isArray(q) ? q[0] : q) || ''
+  }
+
+  set q(q: string) {
+    this.$router.push({ query: { q } })
+  }
+
   async speakRow() {
     if (this.selected.row) {
       await speak(this.selected.row.chinese)
     }
   }
 
+  @Watch('page')
+  @Watch('perPage')
+  @Watch('q')
   async load() {
     const { result, count } = await this.$axios.$get('/api/extra/q', {
       params: {
+        q: this.q,
         page: this.page,
         perPage: this.perPage,
         sort: [`${this.sort.type === 'desc' ? '-' : ''}${this.sort.key}`],

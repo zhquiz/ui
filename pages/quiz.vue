@@ -288,13 +288,13 @@
               v-show="!isQuizShownAnswer"
               ref="quizFront"
               class="content"
-              v-html="templateRender('front')"
+              v-html="templateRendered.front"
             />
             <div
               v-show="isQuizShownAnswer"
               ref="quizBack"
               class="content"
-              v-html="templateRender('back')"
+              v-html="templateRendered.back"
             />
             <b-loading :active="!isQuizItemReady" :is-full-page="false" />
           </div>
@@ -516,6 +516,11 @@ export default class QuizPage extends Vue {
   isQuizShownAnswer = false
   isQuizItemReady = false
 
+  templateRendered = {
+    front: '',
+    back: '',
+  }
+
   quizData: {
     [quizId: string]: IQuizData
   } = {}
@@ -688,6 +693,8 @@ export default class QuizPage extends Vue {
       this.cacheQuizItem({ quizId: it.id })
     }
 
+    this.templateRendered[side] = html
+
     return html
   }
 
@@ -734,20 +741,20 @@ export default class QuizPage extends Vue {
   }
 
   async reload() {
-    const { quiz, upcoming: [dueIn] = [] as string[] } = await this.$axios.$get(
-      '/api/quiz/init',
-      {
-        params: {
-          _: {
-            type: this.type,
-            stage: this.stage,
-            direction: this.direction,
-            isDue: this.isDue,
-            tag: this.selectedTags,
-          },
+    const {
+      quiz,
+      upcoming: [{ nextReview: dueIn }] = [{}],
+    } = await this.$axios.$get('/api/quiz/init', {
+      params: {
+        _: {
+          type: this.type,
+          stage: this.stage,
+          direction: this.direction,
+          isDue: this.isDue,
+          tag: this.selectedTags,
         },
-      }
-    )
+      },
+    })
 
     this.quizArray = []
     // eslint-disable-next-line array-callback-return
@@ -904,9 +911,7 @@ export default class QuizPage extends Vue {
     }
 
     const { entry } = q
-    const data = this.dictionaryData[q.type][entry]
-
-    if (!data) {
+    if (!this.quizRendered[entry] || !this.quizRendered[entry][q.type]) {
       const mask = (s: string, ...ws: string[]) => {
         // eslint-disable-next-line array-callback-return
         ws.map((w) => {
@@ -925,6 +930,8 @@ export default class QuizPage extends Vue {
         return s
       }
 
+      this.$set(this.quizRendered, entry, this.quizRendered[entry] || {})
+
       const setTemplate: {
         [type in IQuizType]: () => Promise<void>
       } = {
@@ -939,7 +946,7 @@ export default class QuizPage extends Vue {
               .$get<{
                 pinyin: string
                 english: string
-              }>('/api/hanzi/match', {
+              }>('/api/hanzi', {
                 params: {
                   entry,
                   select: 'pinyin,english',
@@ -1013,8 +1020,8 @@ export default class QuizPage extends Vue {
           }
 
           this.$set(
-            this.quizRendered,
-            `${entry}.hanzi`,
+            this.quizRendered[entry],
+            `hanzi`,
             this.quizRendered[entry].hanzi
           )
         },
@@ -1032,7 +1039,7 @@ export default class QuizPage extends Vue {
                   pinyin: string
                   english: string
                 }[]
-              }>('/api/vocab/match', {
+              }>('/api/vocab', {
                 params: {
                   entry,
                   select: 'traditional,pinyin,english',
@@ -1227,6 +1234,7 @@ export default class QuizPage extends Vue {
                   english,
                   pinyin,
                   traditional,
+                  mask,
                 }
               ),
               back: ejs.render(
@@ -1280,8 +1288,8 @@ export default class QuizPage extends Vue {
           }
 
           this.$set(
-            this.quizRendered,
-            `${entry}.vocab`,
+            this.quizRendered[entry],
+            `vocab`,
             this.quizRendered[entry].vocab
           )
         },
@@ -1299,10 +1307,10 @@ export default class QuizPage extends Vue {
                   chinese: string
                   english: string
                 }[]
-              }>('/api/sentence/match', {
+              }>('/api/sentence', {
                 params: {
                   entry,
-                  select: 'id,english',
+                  select: 'id,chinese,english',
                 },
               })
               .then(({ result }) => {
@@ -1418,8 +1426,8 @@ export default class QuizPage extends Vue {
           }
 
           this.$set(
-            this.quizRendered,
-            `${entry}.sentence`,
+            this.quizRendered[entry],
+            `sentence`,
             this.quizRendered[entry].sentence
           )
         },
@@ -1434,7 +1442,7 @@ export default class QuizPage extends Vue {
               .$get<{
                 pinyin: string
                 english: string
-              }>('/api/vocab/match', {
+              }>('/api/extra', {
                 params: {
                   entry,
                   select: 'pinyin,english',
@@ -1586,14 +1594,14 @@ export default class QuizPage extends Vue {
           }
 
           this.$set(
-            this.quizRendered,
-            `${entry}.extra`,
+            this.quizRendered[entry],
+            `extra`,
             this.quizRendered[entry].extra
           )
         },
       }
 
-      await setTemplate[q.type]
+      await setTemplate[q.type]()
     }
 
     this.isQuizItemReady = true

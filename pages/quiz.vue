@@ -743,7 +743,7 @@ export default class QuizPage extends Vue {
   async reload() {
     const {
       quiz,
-      upcoming: [{ nextReview: dueIn }] = [{}],
+      upcoming: [{ nextReview: dueIn } = {} as any] = [],
     } = await this.$axios.$get('/api/quiz/init', {
       params: {
         _: {
@@ -1298,42 +1298,35 @@ export default class QuizPage extends Vue {
             return
           }
 
-          const sentences =
+          const ss =
             this.dictionaryData.sentence[entry] ||
             (await this.$axios
               .$get<{
-                result: {
-                  id: string
-                  chinese: string
-                  english: string
-                }[]
+                id: string
+                chinese: string
+                english: string
               }>('/api/sentence', {
                 params: {
                   entry,
                   select: 'id,chinese,english',
                 },
               })
-              .then(({ result }) => {
-                return result.map((r) => {
-                  const out = this.dictionaryData.sentence[r.chinese] || {}
-                  out[r.id] = {
-                    pinyin: makePinyin(r.chinese, {
-                      keepRest: true,
-                    }),
-                    english: r.english,
-                  }
+              .then((r) => {
+                const out = this.dictionaryData.sentence[r.chinese] || {}
+                out[r.id] = {
+                  pinyin: makePinyin(r.chinese, {
+                    keepRest: true,
+                  }),
+                  english: r.english,
+                }
 
-                  this.$set(
-                    this.dictionaryData.sentence,
-                    r.chinese,
-                    this.dictionaryData.sentence[r.chinese]
-                  )
+                this.$set(
+                  this.dictionaryData.sentence,
+                  r.chinese,
+                  this.dictionaryData.sentence[r.chinese]
+                )
 
-                  return {
-                    chinese: r.chinese,
-                    english: r.english,
-                  }
-                })
+                return out[r.id]
               }))
 
           this.quizRendered[entry].sentence = {
@@ -1360,24 +1353,16 @@ export default class QuizPage extends Vue {
               </div>
 
               <ul>
-                <% Object.values(sentences).map(({ pinyin }) => %>
-                  <li>
-                    <%= pinyin %>
-                  </li>
-                <% }) %>
+                <%= pinyin %>
               </ul>
 
               <ul>
-                <% Object.values(sentences).map(({ english }) => %>
-                  <li>
-                    <%= english %>
-                  </li>
-                <% }) %>
+                <%= english %>
               </ul>
               `,
                 {
                   entry,
-                  sentences,
+                  ...ss,
                 }
               ),
             },
@@ -1386,17 +1371,9 @@ export default class QuizPage extends Vue {
                 `
               <h4>Sentence English-Chinese</h4>
 
-              <ul>
-                <% Object.values(sentences).map(({ english }) => %>
-                  <li>
-                    <%= english %>
-                  </li>
-                <% }) %>
-              </ul>
+              <%= english %>
               `,
-                {
-                  sentences,
-                }
+                ss
               ),
               back: ejs.render(
                 `
@@ -1410,16 +1387,12 @@ export default class QuizPage extends Vue {
               </div>
 
               <ul>
-                <% Object.values(sentences).map(({ pinyin }) => %>
-                  <li>
-                    <%= pinyin %>
-                  </li>
-                <% }) %>
+                <%= pinyin %>
               </ul>
               `,
                 {
                   entry,
-                  sentences,
+                  ...ss,
                 }
               ),
             },

@@ -291,14 +291,6 @@ export default class RandomPage extends Vue {
     id: [],
   }
 
-  get level() {
-    return this.$accessor.level
-  }
-
-  get levelMin() {
-    return this.$accessor.levelMin
-  }
-
   onKeypress(evt: KeyboardEvent) {
     doMapKeypress(evt, {
       '1': () => this.loadHanzi(),
@@ -317,53 +309,47 @@ export default class RandomPage extends Vue {
   }
 
   async loadHanzi() {
-    if (this.level) {
-      const { result, english = null } = await this.$axios.$get(
-        '/api/hanzi/random',
-        {
-          params: {
-            levelMin: this.levelMin,
-            level: this.level,
-          },
-        }
-      )
+    const { result, english = null } = await this.$axios.$get(
+      '/api/hanzi/random',
+      {
+        params: {
+          levelMin: this.$accessor.levelMin,
+          level: this.$accessor.level,
+        },
+      }
+    )
 
-      this.hanzi.item = result
-      this.hanzi.english = english
-    }
+    this.hanzi.item = result
+    this.hanzi.english = english
   }
 
   async loadVocab() {
-    if (this.level) {
-      const { result, english = null } = await this.$axios.$get(
-        '/api/vocab/random',
-        {
-          params: {
-            levelMin: this.levelMin,
-            level: this.level,
-          },
-        }
-      )
+    const { result, english = null } = await this.$axios.$get(
+      '/api/vocab/random',
+      {
+        params: {
+          levelMin: this.$accessor.levelMin,
+          level: this.$accessor.level,
+        },
+      }
+    )
 
-      this.vocab.item = result
-      this.vocab.english = english
-    }
+    this.vocab.item = result
+    this.vocab.english = english
   }
 
   async loadSentence() {
-    if (this.level) {
-      const { result, english = null } = await this.$axios.$get(
-        '/api/sentence/random',
-        {
-          params: {
-            levelMin: this.levelMin,
-            level: this.level,
-          },
-        }
-      )
-      this.sentence.item = result
-      this.sentence.english = english
-    }
+    const { result, english = null } = await this.$axios.$get(
+      '/api/sentence/random',
+      {
+        params: {
+          levelMin: this.$accessor.levelMin,
+          level: this.$accessor.level,
+        },
+      }
+    )
+    this.sentence.item = result
+    this.sentence.english = english
   }
 
   async getQuizStatus(item: any) {

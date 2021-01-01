@@ -353,9 +353,22 @@ export default class VocabPage extends Vue {
       : this.current.simplified
   }
 
-  created() {
+  async created() {
     this.q0 = this.q
-    this.onQChange(this.q0)
+    if (!this.q0) {
+      const { result } = await this.$axios.$get<{
+        result: string
+      }>('/api/vocab/random', {
+        params: {
+          levelMin: this.$accessor.levelMin,
+          level: this.$accessor.level,
+        },
+      })
+
+      this.q0 = result
+    }
+
+    await this.onQChange(this.q0)
   }
 
   async onQChange(q: string) {

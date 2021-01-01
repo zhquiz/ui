@@ -465,9 +465,23 @@ export default class HanziPage extends Vue {
     return this.entries[this.i]
   }
 
-  created() {
+  async created() {
     this.q0 = this.q
-    this.onQChange(this.q0)
+
+    if (!this.q0) {
+      const { result } = await this.$axios.$get<{
+        result: string
+      }>('/api/hanzi/random', {
+        params: {
+          levelMin: this.$accessor.levelMin,
+          level: this.$accessor.level,
+        },
+      })
+
+      this.q0 = result
+    }
+
+    await this.onQChange(this.q0)
   }
 
   onQChange(q: string) {

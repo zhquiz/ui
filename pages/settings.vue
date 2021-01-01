@@ -111,10 +111,8 @@ export default class SettingsPage extends Vue {
 
   async doSave() {
     await this.$axios.$patch('/api/user/', {
-      set: {
-        levelMin: this.lv[0],
-        level: this.lv[1],
-      },
+      levelMin: this.lv[0],
+      level: this.lv[1],
     })
     this.$accessor.SET_LEVEL({
       levelMin: this.lv[0],

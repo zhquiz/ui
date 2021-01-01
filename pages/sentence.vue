@@ -72,6 +72,8 @@ export default class SentencePage extends Vue {
         q: this.q,
         page: this.page,
         perPage: this.perPage,
+        level: this.$accessor.level,
+        levelMin: this.$accessor.levelMin,
       },
     })
 

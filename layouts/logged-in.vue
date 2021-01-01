@@ -153,7 +153,7 @@ export default class AppLayout extends Vue {
   }
 
   get level() {
-    const { level } = this.$accessor
+    const { level } = this.$accessor.settings
     return level ? level.toString() : ' '
   }
 

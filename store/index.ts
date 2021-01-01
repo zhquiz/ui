@@ -1,14 +1,22 @@
 import { logOut } from '~/service/auth'
 import { actionTree, getAccessorType, mutationTree } from 'nuxt-typed-vuex'
 
+interface ISettings {
+  level: number | null
+  levelMin: number | null
+  sentenceMin: number | null
+  sentenceMax: number | null
+}
+
 export const state = () => ({
   isAuthReady: false,
   user: null as string | null,
-  /**
-   * This is necessary for layout display
-   */
-  level: null as number | null,
-  levelMin: null as number | null,
+  settings: {
+    level: null,
+    levelMin: null,
+    sentenceMin: null,
+    sentenceMax: null,
+  } as ISettings,
 })
 
 export type RootState = ReturnType<typeof state>
@@ -18,15 +26,8 @@ export const mutations = mutationTree(state, {
     state.isAuthReady = true
     state.user = JSON.parse(JSON.stringify(user))
   },
-  SET_LEVEL(
-    state,
-    lv: {
-      level: number | null
-      levelMin: number | null
-    }
-  ) {
-    state.level = lv.level
-    state.levelMin = lv.levelMin
+  SET_SETTINGS(state, settings: ISettings) {
+    state.settings = settings
   },
 })
 
@@ -40,7 +41,12 @@ export const actions = actionTree(
         if (user) {
           r = await this.$axios.$get('/api/user/', {
             params: {
-              select: ['level', 'levelMin'],
+              select: [
+                'level',
+                'levelMin',
+                'settings.sentence.min',
+                'settings.sentence.max',
+              ],
             },
           })
         }
@@ -50,11 +56,21 @@ export const actions = actionTree(
       }
 
       if (r) {
-        commit('SET_LEVEL', { level: r.level || 3, levelMin: r.levelMin || 1 })
+        commit('SET_SETTINGS', {
+          level: r.level || 3,
+          levelMin: r.levelMin || 1,
+          sentenceMin: r['settings.sentence.min'] || null,
+          sentenceMax: r['settings.sentence.max'] || null,
+        })
         commit('SET_USER', user)
       } else {
         await logOut()
-        commit('SET_LEVEL', { levelMin: null, level: null })
+        commit('SET_SETTINGS', {
+          levelMin: null,
+          level: null,
+          sentenceMin: null,
+          sentenceMax: null,
+        })
         commit('SET_USER', null)
       }
     },

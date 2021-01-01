@@ -205,37 +205,54 @@
             :current-page.sync="page"
             @contextmenu="onTableContextmenu"
           >
-            <template slot-scope="props">
-              <b-table-column field="type" label="Type" width="100" sortable>
-                {{ (props.row || {}).type }}
-              </b-table-column>
-              <b-table-column field="entry" label="Entry" sortable>
-                {{ (props.row || {}).entry }}
-              </b-table-column>
-              <b-table-column field="direction" label="Direction" sortable>
-                <span v-if="(props.row || {}).direction === 'ec'">
-                  English-Chinese
-                </span>
-                <span v-else-if="(props.row || {}).direction === 'te'">
-                  Traditional-English
-                </span>
-                <span v-else-if="(props.row || {}).type === 'vocab'">
-                  Simplified-English
-                </span>
-                <span v-else>Chinese-English</span>
-              </b-table-column>
-              <b-table-column field="tag" label="Tag">
-                <b-tag v-for="t in (props.row || {}).tag || []" :key="t">
-                  {{ t }}
-                </b-tag>
-              </b-table-column>
-              <b-table-column field="srsLevel" label="SRS Level" sortable>
-                {{ (props.row || {}).srsLevel }}
-              </b-table-column>
-              <b-table-column field="nextReview" label="Next Review" sortable>
-                {{ (props.row || {}).nextReview | formatDate }}
-              </b-table-column>
-            </template>
+            <b-table-column
+              v-slot="props"
+              field="type"
+              label="Type"
+              width="100"
+              sortable
+            >
+              {{ props.row.type }}
+            </b-table-column>
+            <b-table-column v-slot="props" field="entry" label="Entry" sortable>
+              {{ props.row.entry }}
+            </b-table-column>
+            <b-table-column
+              v-slot="props"
+              field="direction"
+              label="Direction"
+              sortable
+            >
+              <span v-if="props.row.direction === 'ec'"> English-Chinese </span>
+              <span v-else-if="props.row.direction === 'te'">
+                Traditional-English
+              </span>
+              <span v-else-if="props.row.type === 'vocab'">
+                Simplified-English
+              </span>
+              <span v-else>Chinese-English</span>
+            </b-table-column>
+            <b-table-column v-slot="props" field="tag" label="Tag">
+              <b-tag v-for="t in props.row.tag || []" :key="t">
+                {{ t }}
+              </b-tag>
+            </b-table-column>
+            <b-table-column
+              v-slot="props"
+              field="srsLevel"
+              label="SRS Level"
+              sortable
+            >
+              {{ props.row.srsLevel }}
+            </b-table-column>
+            <b-table-column
+              v-slot="props"
+              field="nextReview"
+              label="Next Review"
+              sortable
+            >
+              {{ props.row.nextReview | formatDate }}
+            </b-table-column>
           </b-table>
         </div>
       </b-collapse>
@@ -678,12 +695,10 @@ export default class QuizPage extends Vue {
     await Promise.all([
       (async () => {
         const {
-          settings: {
-            quiz: { type, stage, direction, isDue } = {} as any,
-          } = {},
+          'settings.quiz': { type, stage, direction, isDue } = {} as any,
         } = await this.$axios.$get('/api/user', {
           params: {
-            select: ['quiz'],
+            select: ['settings.quiz'],
           },
         })
 

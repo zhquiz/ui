@@ -30,32 +30,30 @@
       </div>
 
       <b-table :data="currentData">
-        <template slot-scope="props">
-          <b-table-column field="level" label="Level" width="40">
-            <span
-              class="clickable"
-              @contextmenu.prevent="
-                (evt) => openSelectedContextmenu(evt, props.row.level)
-              "
-            >
-              {{ props.row.level }}
-            </span>
-          </b-table-column>
+        <b-table-column v-slot="props" field="level" label="Level" width="40">
+          <span
+            class="clickable"
+            @contextmenu.prevent="
+              (evt) => openSelectedContextmenu(evt, props.row.level)
+            "
+          >
+            {{ props.row.level }}
+          </span>
+        </b-table-column>
 
-          <b-table-column field="entries" label="Item">
-            <div>
-              <span
-                v-for="t in props.row.entries"
-                :key="t"
-                class="tag clickable"
-                :class="getTagClass(t)"
-                @contextmenu.prevent="(evt) => openSelectedContextmenu(evt, t)"
-              >
-                {{ t }}
-              </span>
-            </div>
-          </b-table-column>
-        </template>
+        <b-table-column v-slot="props" field="entries" label="Item">
+          <div>
+            <span
+              v-for="t in props.row.entries"
+              :key="t"
+              class="tag clickable"
+              :class="getTagClass(t)"
+              @contextmenu.prevent="(evt) => openSelectedContextmenu(evt, t)"
+            >
+              {{ t }}
+            </span>
+          </div>
+        </b-table-column>
       </b-table>
 
       <client-only>
@@ -230,7 +228,7 @@ export default class LevelPage extends Vue {
 
   async init() {
     const {
-      settings: { level: { whatToShow } = {} as any } = {},
+      'settings.level.whatToShow': whatToShow = null,
     } = await this.$axios.$get('/api/user', {
       params: {
         select: ['settings.level.whatToShow'],

@@ -120,6 +120,11 @@ export default class AppLayout extends Vue {
         character: '词',
       },
       {
+        name: 'Sentence',
+        to: '/sentence',
+        character: '句',
+      },
+      {
         name: 'Extra',
         to: '/extra',
         icon: 'user-edit',

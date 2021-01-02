@@ -116,11 +116,7 @@
             </div>
           </b-collapse>
 
-          <b-collapse
-            class="card"
-            animation="slide"
-            :open="typeof current === 'object'"
-          >
+          <b-collapse class="card" animation="slide" :open="!!current.english">
             <div
               slot="trigger"
               slot-scope="props"
@@ -298,6 +294,7 @@
 <script lang="ts">
 import XRegExp from 'xregexp'
 import { Component, Vue } from 'nuxt-property-decorator'
+import makePinyin from 'chinese-to-pinyin'
 
 import { speak } from '~/assets/speak'
 
@@ -319,7 +316,16 @@ import { speak } from '~/assets/speak'
   },
 })
 export default class VocabPage extends Vue {
-  entries: string[] = []
+  entries: (
+    | string
+    | {
+        simplified: string
+        traditional?: string
+        pinyin: string
+        english?: string
+      }
+  )[] = []
+
   i: number = 0
 
   sentences: any[] = []
@@ -403,6 +409,15 @@ export default class VocabPage extends Vue {
           this.entries = [
             ...this.entries.slice(0, this.i),
             ...result,
+            ...this.entries.slice(this.i + 1),
+          ]
+        } else {
+          this.entries = [
+            ...this.entries.slice(0, this.i),
+            {
+              simplified: entry,
+              pinyin: makePinyin(entry, { keepRest: true, toneToNumber: true }),
+            },
             ...this.entries.slice(this.i + 1),
           ]
         }

@@ -1137,9 +1137,12 @@ export default class QuizPage extends Vue {
 
               <% if (sentences.length) { %>
                 <ul>
-                  <% sentences.map(it => { %>
+                  <% sentences.map((it, i) => { %>
                     <li>
                       <%= it.chinese %>
+                      <x-speak-button class="speak-item-<%= i %>">
+                        <%= it.chinese %>
+                      </x-speak-button>
                       <ul>
                         <li>
                           <%= it.english %>
@@ -1196,9 +1199,12 @@ export default class QuizPage extends Vue {
 
               <% if (sentences.length) { %>
                 <ul>
-                  <% sentences.map(it => { %>
+                  <% sentences.map((it, i) => { %>
                     <li>
                       <%= it.chinese %>
+                      <x-speak-button class="speak-item-<%= i %>">
+                        <%= it.chinese %>
+                      </x-speak-button>
                       <ul>
                         <li>
                           <%= it.english %>
@@ -1263,9 +1269,12 @@ export default class QuizPage extends Vue {
 
               <% if (sentences.length) { %>
                 <ul>
-                  <% sentences.map(it => { %>
+                  <% sentences.map((it, i) => { %>
                     <li>
                       <%= it.chinese %>
+                      <x-speak-button class="speak-item-<%= i %>">
+                        <%= it.chinese %>
+                      </x-speak-button>
                       <ul>
                         <li>
                           <%= it.english %>
@@ -1489,9 +1498,12 @@ export default class QuizPage extends Vue {
 
               <% if (sentences.length) { %>
                 <ul>
-                  <% sentences.map(it => { %>
+                  <% sentences.map((it, i) => { %>
                     <li>
                       <%= it.chinese %>
+                      <x-speak-button class="speak-item-<%= i %>">
+                        <%= it.chinese %>
+                      </x-speak-button>
                       <ul>
                         <li>
                           <%= it.english %>
@@ -1543,9 +1555,12 @@ export default class QuizPage extends Vue {
 
               <% if (sentences.length) { %>
                 <ul>
-                  <% sentences.map(it => { %>
+                  <% sentences.map((it, i) => { %>
                     <li>
                       <%= it.chinese %>
+                      <x-speak-button class="speak-item-<%= i %>">
+                        <%= it.chinese %>
+                      </x-speak-button>
                       <ul>
                         <li>
                           <%= it.english %>

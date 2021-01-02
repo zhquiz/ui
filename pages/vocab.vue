@@ -21,8 +21,8 @@
               class="clickable text-center font-zh-simp"
               @contextmenu.prevent="
                 (evt) => {
-                  selectedVocab = simplified
-                  $refs.vocabContextmenu.open(evt)
+                  selected = { entry: simplified, type: 'vocab' }
+                  $refs.context.open(evt)
                 }
               "
             >
@@ -106,8 +106,8 @@
                 class="font-zh-trad clickable"
                 @contextmenu.prevent="
                   (evt) => {
-                    selectedVocab = current.traditional
-                    $refs.vocabContextmenu.open(evt)
+                    selected = { entry: current.traditional, type: 'vocab' }
+                    $refs.context.open(evt)
                   }
                 "
               >
@@ -157,8 +157,8 @@
                   class="clickable"
                   @contextmenu.prevent="
                     (evt) => {
-                      selectedSentence = s.chinese
-                      $refs.sentenceContextmenu.open(evt)
+                      select = { entry: s.chinese, type: 'sentence' }
+                      $refs.context.open(evt)
                     }
                   "
                 >
@@ -172,122 +172,7 @@
       </div>
     </div>
 
-    <client-only>
-      <vue-context ref="vocabContextmenu" lazy>
-        <li>
-          <a
-            role="button"
-            @click.prevent="speak(selectedVocab)"
-            @keypress.prevent="speak(selectedVocab)"
-          >
-            Speak
-          </a>
-        </li>
-        <li v-if="!vocabIds[selectedVocab] || !vocabIds[selectedVocab].length">
-          <a
-            role="button"
-            @click.prevent="addToQuiz(selectedVocab, 'vocab')"
-            @keypress="addToQuiz(selectedVocab, 'vocab')"
-          >
-            Add to quiz
-          </a>
-        </li>
-        <li v-else>
-          <a
-            role="button"
-            @click.prevent="removeFromQuiz(selectedVocab, 'vocab')"
-            @keypress="removeFromQuiz(selectedVocab, 'vocab')"
-          >
-            Remove from quiz
-          </a>
-        </li>
-        <li>
-          <router-link
-            :to="{ path: '/vocab', query: { q: selectedVocab } }"
-            target="_blank"
-          >
-            Search for vocab
-          </router-link>
-        </li>
-        <li>
-          <router-link
-            :to="{ path: '/hanzi', query: { q: selectedVocab } }"
-            target="_blank"
-          >
-            Search for Hanzi
-          </router-link>
-        </li>
-        <li>
-          <a
-            :href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${selectedVocab}*`"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open in MDBG
-          </a>
-        </li>
-      </vue-context>
-
-      <vue-context ref="sentenceContextmenu" lazy>
-        <li>
-          <a
-            role="button"
-            @click.prevent="speak(selectedSentence)"
-            @keypress.prevent="speak(selectedSentence)"
-          >
-            Speak
-          </a>
-        </li>
-        <li
-          v-if="
-            !sentenceIds[selectedSentence] ||
-            !sentenceIds[selectedSentence].length
-          "
-        >
-          <a
-            role="button"
-            @click.prevent="addToQuiz(selectedSentence, 'sentence')"
-            @keypress.prevent="addToQuiz(selectedSentence, 'sentence')"
-          >
-            Add to quiz
-          </a>
-        </li>
-        <li v-else>
-          <a
-            role="button"
-            @click.prevent="removeFromQuiz(selectedSentence, 'sentence')"
-            @keypress.prevent="removeFromQuiz(selectedSentence, 'sentence')"
-          >
-            Remove from quiz
-          </a>
-        </li>
-        <li>
-          <router-link
-            :to="{ path: '/vocab', query: { q: selectedSentence } }"
-            target="_blank"
-          >
-            Search for vocab
-          </router-link>
-        </li>
-        <li>
-          <router-link
-            :to="{ path: '/hanzi', query: { q: selectedSentence } }"
-            target="_blank"
-          >
-            Search for Hanzi
-          </router-link>
-        </li>
-        <li>
-          <a
-            :href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=${selectedSentence}`"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open in MDBG
-          </a>
-        </li>
-      </vue-context>
-    </client-only>
+    <ContextMenu ref="context" :entry="selected.entry" :type="selected.type" />
   </section>
 </template>
 
@@ -295,8 +180,6 @@
 import XRegExp from 'xregexp'
 import { Component, Vue } from 'nuxt-property-decorator'
 import makePinyin from 'chinese-to-pinyin'
-
-import { speak } from '~/assets/speak'
 
 @Component<VocabPage>({
   layout: 'logged-in',
@@ -306,12 +189,6 @@ import { speak } from '~/assets/speak'
     },
     current() {
       this.loadContent()
-    },
-    selectedVocab() {
-      this.loadVocabStatus()
-    },
-    selectedSentence() {
-      this.loadSentenceStatus()
     },
   },
 })
@@ -330,13 +207,10 @@ export default class VocabPage extends Vue {
 
   sentences: any[] = []
 
-  selectedVocab = ''
-  selectedSentence = ''
-
-  vocabIds: any = {}
-  sentenceIds: any = {}
-
-  speak = speak
+  selected: {
+    entry?: string
+    type?: string
+  } = {}
 
   q0 = ''
 
@@ -435,58 +309,6 @@ export default class VocabPage extends Vue {
 
       this.$set(this, 'sentences', r.result)
     })()
-  }
-
-  async loadVocabStatus() {
-    if (this.selectedVocab) {
-      const { result } = await this.$axios.$get('/api/quiz/many', {
-        params: {
-          entries: [this.selectedVocab],
-          type: 'vocab',
-          select: ['id'],
-        },
-      })
-      this.$set(
-        this.vocabIds,
-        this.selectedVocab,
-        result.map((d: any) => d.id)
-      )
-    }
-  }
-
-  async loadSentenceStatus() {
-    if (this.selectedSentence) {
-      const { result } = await this.$axios.$get('/api/quiz/many', {
-        params: {
-          entries: [this.selectedSentence],
-          type: 'sentence',
-          select: ['id'],
-        },
-      })
-      this.$set(
-        this.sentenceIds,
-        this.selectedSentence,
-        result.map((d: any) => d.id)
-      )
-    }
-  }
-
-  async addToQuiz(entry: string, type: string) {
-    await this.$axios.$put('/api/quiz/', { entries: [entry], type })
-    this.$buefy.snackbar.open(`Added ${type}: ${entry} to quiz`)
-
-    type === 'vocab' ? this.loadVocabStatus() : this.loadSentenceStatus()
-  }
-
-  async removeFromQuiz(entry: string, type: string) {
-    const ids =
-      (type === 'vocab' ? this.vocabIds[entry] : this.sentenceIds[entry]) || []
-    this.$axios.$post('/api/quiz/delete/ids', {
-      ids,
-    })
-    this.$buefy.snackbar.open(`Removed ${type}: ${entry} from quiz`)
-
-    type === 'vocab' ? this.loadVocabStatus() : this.loadSentenceStatus()
   }
 }
 </script>

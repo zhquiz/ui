@@ -24,18 +24,23 @@
         @contextmenu="onTableContextmenu"
       >
         <b-table-column v-slot="props" field="chinese" label="Chinese" sortable>
-          {{ props.row.chinese }}
+          <span class="hover-blue cursor-pointer">
+            {{ props.row.chinese }}
+          </span>
         </b-table-column>
         <b-table-column v-slot="props" field="english" label="English" sortable>
           {{ props.row.english }}
         </b-table-column>
       </b-table>
     </div>
+
+    <ContextMenu ref="context" type="sentence" :entry="selected" />
   </section>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Watch } from 'nuxt-property-decorator'
+import { Vue, Component, Watch, Ref } from 'nuxt-property-decorator'
+import ContextMenu from '~/components/ContextMenu.vue'
 
 @Component<SentencePage>({
   layout: 'logged-in',
@@ -45,11 +50,15 @@ import { Vue, Component, Watch } from 'nuxt-property-decorator'
   },
 })
 export default class SentencePage extends Vue {
+  @Ref() context!: ContextMenu
+
   q0 = ''
   tablePagedData: any[] = []
   count = 0
   perPage = 5
   page = 1
+
+  selected = ''
 
   get q() {
     const q = this.$route.query.q
@@ -81,6 +90,21 @@ export default class SentencePage extends Vue {
     this.count = count
   }
 
-  onTableContextmenu() {}
+  async onTableContextmenu(row: any, evt: MouseEvent) {
+    evt.preventDefault()
+
+    this.selected = row.chinese
+    await this.context.open(evt)
+  }
 }
 </script>
+
+<style lang="scss" scoped>
+.hover-blue:hover {
+  color: blue;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+</style>

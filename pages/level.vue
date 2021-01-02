@@ -34,7 +34,10 @@
           <span
             class="clickable"
             @contextmenu.prevent="
-              (evt) => openSelectedContextmenu(evt, props.row.level)
+              (evt) => {
+                selected = allData[props.row.level]
+                $refs.context.open(evt)
+              }
             "
           >
             {{ props.row.level }}
@@ -48,78 +51,33 @@
               :key="t"
               class="tag clickable"
               :class="getTagClass(t)"
-              @contextmenu.prevent="(evt) => openSelectedContextmenu(evt, t)"
+              @contextmenu.prevent="
+                (evt) => {
+                  selected = [t]
+                  $refs.context.open(evt)
+                }
+              "
             >
               {{ t }}
             </span>
           </div>
         </b-table-column>
       </b-table>
-
-      <client-only>
-        <vue-context ref="contextmenu" lazy>
-          <li v-if="selected.entries.length === 1">
-            <a
-              role="button"
-              @click.prevent="speakSelected"
-              @keypress.prevent="speakSelected"
-            >
-              Speak
-            </a>
-          </li>
-          <li v-if="selected.cardIds.length !== selected.entries.length">
-            <a
-              role="button"
-              @click.prevent="addToQuiz"
-              @keypress.prevent="addToQuiz"
-            >
-              Add to quiz
-            </a>
-          </li>
-          <li v-if="selected.cardIds.length">
-            <a
-              role="button"
-              @click.prevent="removeFromQuiz"
-              @keypress.prevent="removeFromQuiz"
-            >
-              Remove from quiz
-            </a>
-          </li>
-          <li v-if="selected.entries.length === 1">
-            <nuxt-link
-              :to="{ path: '/vocab', query: { q: selected.entries[0] } }"
-              target="_blank"
-            >
-              Search for vocab
-            </nuxt-link>
-          </li>
-          <li v-if="selected.entries.length === 1">
-            <nuxt-link
-              :to="{ path: '/hanzi', query: { q: selected.entries[0] } }"
-              target="_blank"
-            >
-              Search for Hanzi
-            </nuxt-link>
-          </li>
-          <li v-if="selected.entries.length === 1">
-            <a
-              :href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${selected.entries[0]}*`"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Open in MDBG
-            </a>
-          </li>
-        </vue-context>
-      </client-only>
     </div>
+
+    <ContextMenu
+      ref="context"
+      type="vocab"
+      :entry="selected"
+      @quiz:added="(evt) => reload(evt.entries)"
+      @quiz:removed="(evt) => reload(evt.entries)"
+    />
   </section>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'nuxt-property-decorator'
-
-import { speak } from '~/assets/speak'
+import { Component, Ref, Vue } from 'nuxt-property-decorator'
+import ContextMenu from '~/components/ContextMenu.vue'
 
 @Component<LevelPage>({
   layout: 'logged-in',
@@ -130,15 +88,11 @@ import { speak } from '~/assets/speak'
     whatToShow() {
       this.onWhatToShowChanged()
     },
-    'selected.entries': {
-      deep: true,
-      handler() {
-        this.loadSelectedStatus()
-      },
-    },
   },
 })
 export default class LevelPage extends Vue {
+  @Ref() context!: ContextMenu
+
   isLoading = true
 
   allData: {
@@ -149,13 +103,7 @@ export default class LevelPage extends Vue {
     [entry: string]: number
   } = {}
 
-  selected: {
-    entries: string[]
-    cardIds: string[]
-  } = {
-    entries: [],
-    cardIds: [],
-  }
+  selected: string[] = []
 
   tagClassMap = [
     (lv: any) => (lv > 2 ? 'is-success' : ''),
@@ -239,50 +187,58 @@ export default class LevelPage extends Vue {
       this.$set(this, 'whatToShow', whatToShow)
     }
 
-    await this.reload()
+    await this.reload([])
     this.isLoading = false
   }
 
-  async reload(...entries: string[]) {
-    const {
-      result = [],
-    }: {
-      result: {
-        entry: string
-        level?: number
-        srsLevel: number
-      }[]
-    } = await (entries.length > 0
-      ? this.$axios.$post('/api/quiz/entries', {
-          entries,
-          type: 'vocab',
-          select: ['entry', 'srsLevel'],
-        })
-      : this.$axios.$get('/api/vocab/level'))
+  async reload(entries: string[]) {
+    if (this.currentData.length === 0) {
+      const { result } = await this.$axios.$get<{
+        result: {
+          entry: string
+          level: number
+        }[]
+      }>('/api/vocab/level')
 
-    // eslint-disable-next-line array-callback-return
-    entries.map((entry) => {
-      delete this.srsLevel[entry]
-    })
-
-    // eslint-disable-next-line array-callback-return
-    result.map(({ entry, level, srsLevel }) => {
-      if (level) {
+      entries = result.map(({ entry, level }) => {
         const lv = level.toString()
         const levelData = this.allData[lv] || []
         levelData.push(entry)
         this.allData[lv] = levelData
-      }
 
-      this.srsLevel[entry] = srsLevel
-    })
+        return entry
+      })
 
-    if (!entries.length) {
       this.$set(this, 'allData', this.allData)
     }
 
-    this.$set(this, 'srsLevel', this.srsLevel)
-    this.setCurrentData()
+    if (entries.length > 0) {
+      const {
+        result = [],
+      }: {
+        result: {
+          entry: string
+          srsLevel: number | null
+        }[]
+      } = await this.$axios.$post('/api/quiz/srsLevel', {
+        entries,
+        type: 'vocab',
+        select: ['entry', 'srsLevel'],
+      })
+
+      // eslint-disable-next-line array-callback-return
+      entries.map((entry) => {
+        delete this.srsLevel[entry]
+      })
+
+      // eslint-disable-next-line array-callback-return
+      result.map(({ entry, srsLevel }) => {
+        this.srsLevel[entry] = typeof srsLevel === 'number' ? srsLevel : -1
+      })
+
+      this.$set(this, 'srsLevel', this.srsLevel)
+      this.setCurrentData()
+    }
   }
 
   async onWhatToShowChanged() {
@@ -293,79 +249,6 @@ export default class LevelPage extends Vue {
         'settings.level.whatToShow': this.whatToShow,
       },
     })
-  }
-
-  async loadSelectedStatus() {
-    if (this.selected.entries.length) {
-      const { entries } = this.selected
-
-      const { result = [] } = await this.$axios.$post('/api/quiz/entries', {
-        entries,
-        type: 'vocab',
-        select: ['id'],
-      })
-
-      this.selected.cardIds = result
-        .map((r: any) => r.cardId)
-        .filter((id: string) => id)
-      this.$set(this.selected, 'quizIds', this.selected.cardIds)
-    }
-  }
-
-  async addToQuiz() {
-    const { entries } = this.selected
-
-    if (entries.length) {
-      await this.$axios.$put('/api/quiz', {
-        entries,
-        type: 'vocab',
-      })
-      this.$buefy.snackbar.open(
-        `Added vocab: ${entries.slice(0, 3).join(',')}${
-          entries.length > 3 ? '...' : ''
-        } to quiz`
-      )
-      await this.reload(...entries)
-    }
-  }
-
-  async removeFromQuiz() {
-    const { entries, cardIds } = this.selected
-
-    if (entries.length && cardIds.length) {
-      await this.$axios.$post('/api/quiz/delete/ids', {
-        ids: cardIds,
-      })
-      this.$buefy.snackbar.open(
-        `Removed vocab: ${entries.slice(0, 3).join(',')}${
-          entries.length > 3 ? '...' : ''
-        }  from quiz`
-      )
-      await this.reload(...entries)
-    }
-  }
-
-  async speakSelected() {
-    const {
-      entries: [s],
-    } = this.selected
-    if (s) {
-      await speak(s)
-    }
-  }
-
-  async openSelectedContextmenu(evt: MouseEvent, it: number | string) {
-    if (typeof it === 'number') {
-      const selected = this.currentData.filter(({ level }) => level === it)[0]
-      this.selected.entries = selected ? selected.entries : []
-    } else if (typeof it === 'string') {
-      this.selected.entries = [it]
-    }
-
-    if (this.selected.entries.length > 0) {
-      await this.loadSelectedStatus()
-      ;(this.$refs.contextmenu as any).open(evt)
-    }
   }
 }
 </script>

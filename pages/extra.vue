@@ -61,78 +61,19 @@
       />
     </div>
 
-    <client-only>
-      <vue-context ref="contextmenu" lazy>
-        <li>
-          <a
-            role="button"
-            @click.prevent="speakRow()"
-            @keypress.prevent="speakRow()"
-          >
-            Speak
-          </a>
-        </li>
-        <li v-if="selected.row && !selected.quizIds.length">
-          <a
-            role="button"
-            @click.prevent="addToQuiz()"
-            @keypress.prevent="addToQuiz()"
-          >
-            Add to quiz
-          </a>
-        </li>
-        <li v-if="selected.row && selected.quizIds.length">
-          <a
-            role="button"
-            @click.prevent="removeFromQuiz()"
-            @keypress.prevent="removeFromQuiz()"
-          >
-            Remove from quiz
-          </a>
-        </li>
-        <li v-if="selected.row">
-          <nuxt-link
-            :to="{ path: '/vocab', query: { q: selected.row.entry } }"
-            target="_blank"
-          >
-            Search for vocab
-          </nuxt-link>
-        </li>
-        <li v-if="selected.row">
-          <nuxt-link
-            :to="{ path: '/hanzi', query: { q: selected.row.entry } }"
-            target="_blank"
-          >
-            Search for Hanzi
-          </nuxt-link>
-        </li>
-        <li v-if="selected.row">
-          <a
-            :href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${selected.row.entry}*`"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open in MDBG
-          </a>
-        </li>
-        <li>
-          <a
-            role="button"
-            @click.prevent="doDelete()"
-            @keypress.prevent="doDelete()"
-          >
-            Delete
-          </a>
-        </li>
-      </vue-context>
-    </client-only>
+    <ContextMenu
+      :id="selected.id"
+      ref="context"
+      :entry="selected.entry"
+      type="extra"
+      @deleted="doDelete"
+    />
   </section>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from 'nuxt-property-decorator'
-
-import { speak } from '~/assets/speak'
+import { Component, Ref, Vue, Watch } from 'nuxt-property-decorator'
+import ContextMenu from '~/components/ContextMenu.vue'
 
 interface IExtra {
   id?: string
@@ -148,6 +89,8 @@ interface IExtra {
   },
 })
 export default class ExtraPage extends Vue {
+  @Ref() context!: ContextMenu
+
   q0 = ''
   count = 0
   perPage = 10
@@ -171,11 +114,9 @@ export default class ExtraPage extends Vue {
   }
 
   selected: {
-    row?: IExtra
-    quizIds: string[]
-  } = {
-    quizIds: [],
-  }
+    id?: string
+    entry?: string
+  } = {}
 
   get q() {
     const q = this.$route.query.q
@@ -184,12 +125,6 @@ export default class ExtraPage extends Vue {
 
   set q(q: string) {
     this.$router.push({ query: { q } })
-  }
-
-  async speakRow() {
-    if (this.selected.row) {
-      await speak(this.selected.row.chinese)
-    }
   }
 
   @Watch('page')
@@ -215,11 +150,8 @@ export default class ExtraPage extends Vue {
     const { existing, id } = await this.$axios.$put('/api/extra', this.newItem)
 
     if (id) {
-      this.selected.row = {
-        ...this.newItem,
-        id,
-      }
-      this.$set(this.selected, 'row', this.selected.row)
+      this.selected.id = id
+      this.selected.entry = this.newItem.chinese
     }
 
     this.newItem = {
@@ -230,7 +162,8 @@ export default class ExtraPage extends Vue {
     this.$set(this, 'newItem', this.newItem)
 
     if (id) {
-      await Promise.all([this.load(), this.addToQuiz()])
+      await this.context.addToQuiz()
+      await this.load()
     } else if (existing) {
       const { type, entry } = existing
       await this.$axios.$put('/api/quiz', {
@@ -243,59 +176,15 @@ export default class ExtraPage extends Vue {
   }
 
   async doDelete() {
-    if (this.selected.row && this.selected.row.id) {
-      await this.$axios.$delete('/api/extra', {
-        params: {
-          id: this.selected.row.id,
-        },
-      })
-      await this.load()
-    }
+    await this.load()
   }
 
   async onTableContextmenu(row: any, evt: MouseEvent) {
     evt.preventDefault()
 
-    this.selected.row = row
-    const { result } = await this.$axios.$get('/api/quiz/many', {
-      params: {
-        entries: [row.entry],
-        select: ['id'],
-        type: 'extra',
-      },
-    })
-
-    this.selected.quizIds = result.map((q: any) => q.id)
-    this.$set(this.selected, 'quizIds', this.selected.quizIds)
-
-    const contextmenu = this.$refs.contextmenu as any
-    contextmenu.open(evt)
-  }
-
-  async addToQuiz() {
-    if (this.selected.row) {
-      await this.$axios.$put('/api/quiz', {
-        entries: [this.selected.row.chinese],
-        type: 'extra',
-      })
-
-      this.$buefy.snackbar.open(
-        `Added extra: ${this.selected.row.chinese} to quiz`
-      )
-    }
-  }
-
-  async removeFromQuiz() {
-    if (this.selected.row) {
-      if (this.selected.quizIds.length) {
-        await this.$axios.$post('/api/quiz/delete/ids', {
-          ids: this.selected.quizIds,
-        })
-      }
-      this.$buefy.snackbar.open(
-        `Removed extra: ${this.selected.row.chinese} from quiz`
-      )
-    }
+    this.selected.id = row.id
+    this.selected.entry = row.chinese
+    await this.context.open(evt)
   }
 
   async onSort(key: string, type: string) {

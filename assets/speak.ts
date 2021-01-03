@@ -1,3 +1,7 @@
+import { api } from '~/service/api'
+
+import { g } from './shared'
+
 const allVoices: Record<string, string> = {}
 
 if (process.client) {
@@ -31,6 +35,16 @@ if (process.client) {
 }
 
 export async function speak(s: string) {
+  if (g.speak === 'server') {
+    await api.post('/api/chinese/speak', undefined, {
+      params: {
+        q: s,
+      },
+    })
+
+    return
+  }
+
   const voices = Object.keys(allVoices)
   const stage1 = () => voices.filter((v) => v === 'zh' || v === 'cmn')[0]
   const stage2 = () => {

@@ -362,6 +362,7 @@ export default class QuizCard extends Vue {
   }
 
   endQuiz() {
+    this.isQuizModal = false
     this.$emit('quiz:ended')
   }
 
@@ -401,21 +402,24 @@ export default class QuizCard extends Vue {
       await this.cacheQuizItem({ relativePosition: 0 })
     }
 
-    const it = this.quizData[this.quizArray[this.quizIndex + 1]]
+    this.current = (() => {
+      const it = this.quizData[this.quizArray[this.quizIndex + 1]]
 
-    if (!it) {
-      return
-    }
+      if (!it) {
+        return {}
+      }
 
-    const { entry, type } = it
-    if (!entry || !type) {
-      return
-    }
+      const { entry, type } = it
+      if (!entry || !type) {
+        return {}
+      }
 
-    this.current = {
-      ...it,
-      ...this.dictionaryData[type][entry],
-    }
+      return {
+        ...it,
+        ...this.dictionaryData[type][entry],
+      }
+    })()
+
     this.quizIndex++
   }
 

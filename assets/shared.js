@@ -1,13 +1,15 @@
 /**
  * @type {{
+  isReady: boolean
   speak: 'web' | 'server'
   plausible?: string
-  isReady: boolean
+  cotter?: string
+  user?: string
 }}
  */
 export const g = {
-  speak: 'web',
   isReady: false,
+  speak: 'web',
 }
 
 export async function fetchSettings() {

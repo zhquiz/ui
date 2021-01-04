@@ -1,4 +1,5 @@
 import { Plugin } from '@nuxt/types'
+import { fetchSettings } from '~/assets/shared'
 import { getCotterConfig, setCotter } from '~/service/auth'
 import Cotter from 'cotter'
 
@@ -9,33 +10,30 @@ declare global {
 }
 
 const onInit: Plugin = async ({ $axios, app, route }) => {
-  try {
-    const cotterConfig: {
-      apiKey: string
-    } = await fetch('/server/auth/cotter').then((r) => r.json())
+  const g = await fetchSettings()
 
-    const cotter = new Cotter(cotterConfig.apiKey)
+  if (g.cotter) {
+    const cotter = new Cotter(g.cotter)
     setCotter(cotter)
 
     const config = await getCotterConfig()
     $axios.defaults.headers = Object.assign($axios.defaults.headers, config)
     await app.$accessor.updateUser(config['X-User'] || null)
-
-    window.onNuxtReady(() => {
-      if (app.$accessor.user) {
-        if (route.path === '/') {
-          window.$nuxt.$router.push('/random')
-        }
-      } else {
-        if (route.path !== '/') {
-          window.$nuxt.$router.push('/')
-        }
-      }
-    })
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error(e)
+  } else {
+    await app.$accessor.updateUser(g.user || null)
   }
+
+  window.onNuxtReady(() => {
+    if (app.$accessor.user) {
+      if (route.path === '/') {
+        window.$nuxt.$router.push('/random')
+      }
+    } else {
+      if (route.path !== '/') {
+        window.$nuxt.$router.push('/')
+      }
+    }
+  })
 }
 
 export default onInit

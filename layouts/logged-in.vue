@@ -1,5 +1,5 @@
 <template>
-  <b-loading v-if="!$store.state.isAuthReady" active />
+  <b-loading v-if="!isReady" active />
   <section v-else class="AppLayout">
     <nav class="vertical-nav">
       <div class="icon-nav" style="overflow-y: scroll">
@@ -95,8 +95,19 @@
 import { Component, Vue } from 'nuxt-property-decorator'
 import { logOut } from '~/service/auth'
 
-@Component
+@Component<AppLayout>({
+  watch: {
+    isReady() {
+      const isAuthReady = this.$store.state.isAuthReady
+      this.$nextTick(() => {
+        this.isReady = isAuthReady
+      })
+    },
+  },
+})
 export default class AppLayout extends Vue {
+  isReady = false
+
   get navItems() {
     return [
       {

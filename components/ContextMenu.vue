@@ -1,5 +1,10 @@
 <template>
   <vue-context ref="contextmenu" lazy>
+    <li v-if="reload">
+      <a role="button" @click.prevent="reload" @keypress.prevent="reload">
+        Reload
+      </a>
+    </li>
     <li v-if="entries.length === 1">
       <a role="button" @click.prevent="doSpeak()" @keypress.prevent="doSpeak()">
         Speak
@@ -71,6 +76,7 @@ export default class ContextMenu extends Vue {
   @Prop() id?: string
   @Prop() entry?: string | string[]
   @Prop() type?: string
+  @Prop() reload?: () => void
 
   @Ref() contextmenu!: {
     open: (evt: MouseEvent) => void

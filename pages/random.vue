@@ -7,12 +7,12 @@
             <b-tooltip :label="hanzi.english">
               <div
                 class="font-han hanzi clickable"
-                @contextmenu.prevent="(evt) => $refs.hanziContextmenu.open(evt)"
+                @contextmenu.prevent="(evt) => openContext(evt, 'hanzi')"
               >
-                {{ hanzi.item }}
+                {{ hanzi.entry }}
               </div>
             </b-tooltip>
-            <b-loading :active="!hanzi.item" :is-full-page="false"></b-loading>
+            <b-loading :active="!hanzi.entry" :is-full-page="false"></b-loading>
           </div>
           <center>Hanzi of the day</center>
         </div>
@@ -22,17 +22,12 @@
             <b-tooltip :label="vocab.english">
               <div
                 class="font-zh-simp hanzi clickable"
-                @contextmenu.prevent="
-                  (evt) =>
-                    getQuizStatus(sentence).then(() =>
-                      $refs.vocabContextmenu.open(evt)
-                    )
-                "
+                @contextmenu.prevent="(evt) => openContext(evt, 'vocab')"
               >
-                {{ vocab.item }}
+                {{ vocab.entry }}
               </div>
             </b-tooltip>
-            <b-loading :active="!vocab.item" :is-full-page="false"></b-loading>
+            <b-loading :active="!vocab.entry" :is-full-page="false"></b-loading>
           </div>
           <center>Vocab of the day</center>
         </div>
@@ -42,351 +37,111 @@
         <b-tooltip :label="sentence.english">
           <div
             class="font-zh-simp hanzi clickable text-center"
-            @contextmenu.prevent="
-              (evt) =>
-                getQuizStatus(sentence).then(() =>
-                  $refs.sentenceContextmenu.open(evt)
-                )
-            "
+            @contextmenu.prevent="(evt) => openContext(evt, 'sentence')"
           >
-            {{ sentence.item }}
+            {{ sentence.entry }}
           </div>
         </b-tooltip>
-        <b-loading :active="!sentence.item" :is-full-page="false" />
+        <b-loading :active="!sentence.entry" :is-full-page="false" />
       </div>
       <center>Sentence of the day</center>
     </div>
 
-    <client-only>
-      <vue-context ref="hanziContextmenu" lazy>
-        <li>
-          <a
-            role="button"
-            @click.prevent="loadHanzi"
-            @keypress.prevent="loadHanzi"
-          >
-            Reload
-          </a>
-        </li>
-        <li>
-          <a
-            role="button"
-            @click.prevent="speak(hanzi.item)"
-            @keypress.prevent="speak(hanzi.item)"
-          >
-            Speak
-          </a>
-        </li>
-        <li v-if="!hanzi.id.length">
-          <a
-            role="button"
-            @click.prevent="addToQuiz(hanzi)"
-            @keypress.prevent="addToQuiz(hanzi)"
-          >
-            Add to quiz
-          </a>
-        </li>
-        <li v-else>
-          <a
-            role="button"
-            @click.prevent="removeFromQuiz(hanzi)"
-            @keypress.prevent="removeFromQuiz(hanzi)"
-          >
-            Remove from quiz
-          </a>
-        </li>
-        <li>
-          <nuxt-link
-            :to="{ path: '/vocab', query: { q: hanzi.item } }"
-            target="_blank"
-          >
-            Search for vocab
-          </nuxt-link>
-        </li>
-        <li>
-          <nuxt-link
-            :to="{ path: '/hanzi', query: { q: hanzi.item } }"
-            target="_blank"
-          >
-            Search for Hanzi
-          </nuxt-link>
-        </li>
-        <li>
-          <a
-            :href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${hanzi.item}*`"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open in MDBG
-          </a>
-        </li>
-      </vue-context>
-
-      <vue-context ref="vocabContextmenu" lazy>
-        <li>
-          <a
-            role="button"
-            @click.prevent="loadVocab"
-            @keypress.prevent="loadVocab"
-          >
-            Reload
-          </a>
-        </li>
-        <li>
-          <a
-            role="button"
-            @click.prevent="speak(vocab.item)"
-            @keypress.prevent="speak(vocab.item)"
-          >
-            Speak
-          </a>
-        </li>
-        <li v-if="!vocab.id.length">
-          <a
-            role="button"
-            @click.prevent="addToQuiz(vocab)"
-            @keypress.prevent="addToQuiz(vocab)"
-          >
-            Add to quiz
-          </a>
-        </li>
-        <li v-else>
-          <a
-            role="button"
-            @click.prevent="removeFromQuiz(vocab)"
-            @keypress.prevent="removeFromQuiz(vocab)"
-          >
-            Remove from quiz
-          </a>
-        </li>
-        <li>
-          <nuxt-link
-            :to="{ path: '/vocab', query: { q: vocab.item } }"
-            target="_blank"
-          >
-            Search for vocab
-          </nuxt-link>
-        </li>
-        <li>
-          <nuxt-link
-            :to="{ path: '/hanzi', query: { q: vocab.item } }"
-            target="_blank"
-          >
-            Search for Hanzi
-          </nuxt-link>
-        </li>
-        <li>
-          <a
-            :href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=*${vocab.item}*`"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open in MDBG
-          </a>
-        </li>
-      </vue-context>
-
-      <vue-context ref="sentenceContextmenu" lazy>
-        <li>
-          <a
-            role="button"
-            @click.prevent="loadSentence"
-            @keypress.prevent="loadSentence"
-          >
-            Reload
-          </a>
-        </li>
-        <li>
-          <a
-            role="button"
-            @click.prevent="speak(sentence.item)"
-            @keypress.prevent="speak(sentence.item)"
-          >
-            Speak
-          </a>
-        </li>
-        <li v-if="!sentence.id.length">
-          <a
-            role="button"
-            @click.prevent="addToQuiz(sentence)"
-            @keypress.prevent="addToQuiz(sentence)"
-          >
-            Add to quiz
-          </a>
-        </li>
-        <li v-else>
-          <a
-            role="button"
-            @click.prevent="removeFromQuiz(sentence)"
-            @keypress.prevent="removeFromQuiz(sentence)"
-          >
-            Remove from quiz
-          </a>
-        </li>
-        <li>
-          <nuxt-link
-            :to="{ path: '/vocab', query: { q: sentence.item } }"
-            target="_blank"
-          >
-            Search for vocab
-          </nuxt-link>
-        </li>
-        <li>
-          <nuxt-link
-            :to="{ path: '/hanzi', query: { q: sentence.item } }"
-            target="_blank"
-          >
-            Search for Hanzi
-          </nuxt-link>
-        </li>
-        <li>
-          <a
-            :href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=${sentence.item}`"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open in MDBG
-          </a>
-        </li>
-      </vue-context>
-    </client-only>
+    <ContextMenu
+      ref="context"
+      :entry="selected.entry"
+      :type="selected.type"
+      :reload="selected.reload"
+    />
   </section>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'nuxt-property-decorator'
+import { Component, Ref, Vue } from 'nuxt-property-decorator'
 
-import { doMapKeypress } from '~/assets/keypress'
-import { speak } from '~/assets/speak'
+import ContextMenu from '~/components/ContextMenu.vue'
 
 @Component<RandomPage>({
   layout: 'logged-in',
   mounted() {
-    window.onkeypress = this.onKeypress.bind(this)
-    Promise.all([this.loadHanzi(), this.loadVocab(), this.loadSentence()])
-  },
-  beforeDestroy() {
-    window.onkeypress = null
+    Promise.all([
+      this.hanzi.reload(),
+      this.vocab.reload(),
+      this.sentence.reload(),
+    ])
   },
 })
 export default class RandomPage extends Vue {
+  @Ref() context!: ContextMenu
+
   hanzi = {
     type: 'hanzi',
-    item: null,
-    english: null,
-    id: [],
+    entry: '',
+    english: '',
+    reload: async () => {
+      const { result, english = '' } = await this.$axios.$get(
+        '/api/hanzi/random',
+        {
+          params: {
+            levelMin: this.$accessor.levelMin,
+            level: this.$accessor.level,
+          },
+        }
+      )
+
+      this.hanzi.entry = result
+      this.hanzi.english = english
+    },
   }
 
   vocab = {
     type: 'vocab',
-    item: null,
-    english: null,
-    id: [],
+    entry: '',
+    english: '',
+    reload: async () => {
+      const { result, english = '' } = await this.$axios.$get(
+        '/api/vocab/random',
+        {
+          params: {
+            levelMin: this.$accessor.levelMin,
+            level: this.$accessor.level,
+          },
+        }
+      )
+
+      this.vocab.entry = result
+      this.vocab.english = english
+    },
   }
 
   sentence = {
     type: 'sentence',
-    item: null,
-    english: null,
-    id: [],
+    entry: '',
+    english: '',
+    reload: async () => {
+      const { result, english = '' } = await this.$axios.$get(
+        '/api/sentence/random',
+        {
+          params: {
+            levelMin: this.$accessor.levelMin,
+            level: this.$accessor.level,
+          },
+        }
+      )
+      this.sentence.entry = result
+      this.sentence.english = english
+    },
   }
 
-  onKeypress(evt: KeyboardEvent) {
-    doMapKeypress(evt, {
-      '1': () => this.loadHanzi(),
-      '2': () => this.loadVocab(),
-      '3': () => this.loadSentence(),
-      q: () => this.speak(this.hanzi.item),
-      w: () => this.speak(this.vocab.item),
-      e: () => this.speak(this.sentence.item),
-    })
-  }
+  selected: {
+    type?: string
+    entry?: string
+    reload?: () => void
+  } = {}
 
-  async speak(s?: string | null) {
-    if (s) {
-      speak(s)
-    }
-  }
-
-  async loadHanzi() {
-    const { result, english = null } = await this.$axios.$get(
-      '/api/hanzi/random',
-      {
-        params: {
-          levelMin: this.$accessor.levelMin,
-          level: this.$accessor.level,
-        },
-      }
-    )
-
-    this.hanzi.item = result
-    this.hanzi.english = english
-  }
-
-  async loadVocab() {
-    const { result, english = null } = await this.$axios.$get(
-      '/api/vocab/random',
-      {
-        params: {
-          levelMin: this.$accessor.levelMin,
-          level: this.$accessor.level,
-        },
-      }
-    )
-
-    this.vocab.item = result
-    this.vocab.english = english
-  }
-
-  async loadSentence() {
-    const { result, english = null } = await this.$axios.$get(
-      '/api/sentence/random',
-      {
-        params: {
-          levelMin: this.$accessor.levelMin,
-          level: this.$accessor.level,
-        },
-      }
-    )
-    this.sentence.item = result
-    this.sentence.english = english
-  }
-
-  async getQuizStatus(item: any) {
-    const vm = this as any
-
-    const { result } = await this.$axios.$get('/api/quiz/many', {
-      params: {
-        entries: [item.item],
-        type: item.type,
-        select: ['id'],
-      },
-    })
-
-    this.$set(
-      vm[item.type],
-      'id',
-      result.map((el: any) => el.id)
-    )
-  }
-
-  async addToQuiz(item: any) {
-    await this.$axios.$put('/api/quiz/', {
-      entries: [item.item],
-      type: item.type,
-    })
-
-    this.$buefy.snackbar.open(`Added ${item.type}: ${item.item} to quiz`)
-  }
-
-  async removeFromQuiz(item: any) {
-    const vm = this as any
-
-    await this.$axios.$post('/api/quiz/delete/ids', {
-      ids: vm[item.type].id,
-    })
-
-    this.$buefy.snackbar.open(`Removed ${item.type}: ${item.item} from quiz`)
+  openContext(evt: MouseEvent, type: 'hanzi' | 'vocab' | 'sentence') {
+    this.selected = this[type]
+    this.context.open(evt)
   }
 }
 </script>

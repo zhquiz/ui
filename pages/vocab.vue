@@ -20,10 +20,7 @@
             <div
               class="clickable text-center font-zh-simp"
               @contextmenu.prevent="
-                (evt) => {
-                  selected = { entry: simplified, type: 'vocab' }
-                  $refs.context.open(evt)
-                }
+                (evt) => openContext(evt, simplified, 'vocab')
               "
             >
               {{ simplified }}
@@ -105,10 +102,7 @@
               <div
                 class="font-zh-trad clickable"
                 @contextmenu.prevent="
-                  (evt) => {
-                    selected = { entry: current.traditional, type: 'vocab' }
-                    $refs.context.open(evt)
-                  }
+                  (evt) => openContext(evt, current.traditional, 'vocab')
                 "
               >
                 {{ current.traditional }}
@@ -156,10 +150,7 @@
                 <span
                   class="clickable"
                   @contextmenu.prevent="
-                    (evt) => {
-                      select = { entry: s.chinese, type: 'sentence' }
-                      $refs.context.open(evt)
-                    }
+                    (evt) => openContext(evt, s.chinese, 'sentence')
                   "
                 >
                   {{ s.chinese }}
@@ -178,8 +169,9 @@
 
 <script lang="ts">
 import XRegExp from 'xregexp'
-import { Component, Vue } from 'nuxt-property-decorator'
+import { Component, Ref, Vue } from 'nuxt-property-decorator'
 import makePinyin from 'chinese-to-pinyin'
+import ContextMenu from '~/components/ContextMenu.vue'
 
 @Component<VocabPage>({
   layout: 'logged-in',
@@ -193,6 +185,8 @@ import makePinyin from 'chinese-to-pinyin'
   },
 })
 export default class VocabPage extends Vue {
+  @Ref() context!: ContextMenu
+
   entries: (
     | string
     | {
@@ -249,6 +243,15 @@ export default class VocabPage extends Vue {
     }
 
     await this.onQChange(this.q0)
+  }
+
+  openContext(
+    evt: MouseEvent,
+    entry = this.selected.entry,
+    type = this.selected.type
+  ) {
+    this.selected = { entry, type }
+    this.context.open(evt)
   }
 
   async onQChange(q: string) {

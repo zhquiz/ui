@@ -1,5 +1,5 @@
 <template>
-  <b-loading v-if="!($store.state.isAuthReady && $store.state.user)" active />
+  <b-loading v-if="!$store.state.isAuthReady" active />
   <section v-else class="AppLayout">
     <nav class="vertical-nav">
       <div class="icon-nav" style="overflow-y: scroll">
@@ -25,9 +25,9 @@
         </component>
       </div>
 
-      <div class="icon-nav">
+      <div v-if="userName" class="icon-nav">
         <div class="login-banner">
-          <div>Signed in as {{ getUserName() }}</div>
+          <div>Signed in as {{ userName }}</div>
           <button
             class="button is-danger"
             @click="doLogout"
@@ -70,9 +70,9 @@
           <span>{{ nav.name }}</span>
         </b-navbar-item>
       </template>
-      <template slot="end">
+      <template v-if="userName" slot="end">
         <b-navbar-item tag="div" class="flex flex-row flex-wrap items-center">
-          <div>Signed in as {{ getUserName() }}</div>
+          <div>Signed in as {{ userName }}</div>
           <div class="flex flex-row flex-grow">
             <div class="flex-grow" />
             <button
@@ -157,8 +157,9 @@ export default class AppLayout extends Vue {
     return level ? level.toString() : ' '
   }
 
-  getUserName() {
-    return this.$accessor.user || ''
+  get userName(): string {
+    // return this.$accessor.user || ''
+    return this.$store.state.user
   }
 
   async doLogout() {

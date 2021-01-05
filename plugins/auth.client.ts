@@ -20,11 +20,11 @@ const onInit: Plugin = async ({ $axios, app, route }) => {
     $axios.defaults.headers = Object.assign($axios.defaults.headers, config)
     await app.$accessor.updateUser(config['X-User'] || null)
   } else {
-    await app.$accessor.updateUser(g.user || null)
+    await app.$accessor.updateUser('')
   }
 
   window.onNuxtReady(() => {
-    if (app.$accessor.user) {
+    if (app.$accessor.user !== null) {
       if (route.path === '/') {
         window.$nuxt.$router.push('/random')
       }

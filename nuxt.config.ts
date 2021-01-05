@@ -45,7 +45,6 @@ export default (): NuxtConfig => {
     plugins: [
       '~/plugins/axios-nuxt.ts',
       '~/plugins/axios-query.ts',
-      '~/plugins/codemirror.client.js',
       '~/plugins/filter.ts',
       '~/plugins/plausible.client.js',
       '~/plugins/vue-context.client.js',
@@ -145,6 +144,9 @@ export default (): NuxtConfig => {
 
         config.node.fs = 'empty'
       },
+    },
+    generate: {
+      dir: '../server/public',
     },
   }
 }

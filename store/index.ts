@@ -38,7 +38,7 @@ export const actions = actionTree(
       let r: any
 
       try {
-        if (user) {
+        if (user !== null) {
           r = await this.$axios.$get('/api/user/', {
             params: {
               select: [

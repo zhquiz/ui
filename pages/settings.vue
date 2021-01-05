@@ -65,7 +65,7 @@
         </div>
       </form>
 
-      <div class="container w-full danger-zone">
+      <div v-if="isSignedIn" class="container w-full danger-zone">
         <h3 class="title is-4 is-danger">Danger Zone</h3>
 
         <form
@@ -122,6 +122,7 @@
 
 <script lang="ts">
 import { Component, Vue } from 'nuxt-property-decorator'
+import { cotter, logOut } from '~/service/auth'
 
 @Component({
   layout: 'logged-in',
@@ -177,9 +178,12 @@ export default class SettingsPage extends Vue {
     this.$buefy.snackbar.open('Saved')
   }
 
+  isSignedIn() {
+    return !!cotter
+  }
+
   async doDeleteAccount() {
-    await this.$axios.$delete('/api/user/')
-    this.$router.push('/')
+    logOut(this.$router)
   }
 }
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <b-loading v-if="!$store.state.isAuthReady" active />
+  <b-loading v-if="!isReady" active />
   <section v-else class="IndexPage">
     <article>
       <div class="content">
@@ -49,7 +49,11 @@ import { cotter, getCotterConfig } from '~/service/auth'
   watch: {
     '$store.state.isAuthReady'() {
       this.$nextTick(() => {
-        this.showCotterForm()
+        this.isReady = true
+
+        this.$nextTick(() => {
+          this.showCotterForm()
+        })
       })
     },
   },
@@ -58,6 +62,8 @@ import { cotter, getCotterConfig } from '~/service/auth'
   },
 })
 export default class IndexPage extends Vue {
+  isReady = false
+
   showCotterForm() {
     if (cotter && this.$el.querySelector('#cotter-form-container')) {
       cotter

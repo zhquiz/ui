@@ -83,8 +83,8 @@ export default class RandomPage extends Vue {
         '/api/hanzi/random',
         {
           params: {
-            levelMin: this.$accessor.levelMin,
-            level: this.$accessor.level,
+            levelMin: this.$accessor.settings.levelMin,
+            level: this.$accessor.settings.level,
           },
         }
       )
@@ -103,8 +103,8 @@ export default class RandomPage extends Vue {
         '/api/vocab/random',
         {
           params: {
-            levelMin: this.$accessor.levelMin,
-            level: this.$accessor.level,
+            levelMin: this.$accessor.settings.levelMin,
+            level: this.$accessor.settings.level,
           },
         }
       )
@@ -123,8 +123,8 @@ export default class RandomPage extends Vue {
         '/api/sentence/random',
         {
           params: {
-            levelMin: this.$accessor.levelMin,
-            level: this.$accessor.level,
+            levelMin: this.$accessor.settings.levelMin,
+            level: this.$accessor.settings.level,
           },
         }
       )

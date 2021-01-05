@@ -20,7 +20,7 @@ const onInit: Plugin = async ({ $axios, app, route }) => {
     $axios.defaults.headers = Object.assign($axios.defaults.headers, config)
     await app.$accessor.updateUser(config['X-User'] || null)
   } else {
-    await app.$accessor.updateUser('')
+    await app.$accessor.updateUser(g.user || '')
   }
 
   window.onNuxtReady(() => {

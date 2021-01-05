@@ -1,5 +1,5 @@
 <template>
-  <b-loading v-if="!isReady" active />
+  <b-loading v-if="!$store.state.isAuthReady" active />
   <section v-else class="AppLayout">
     <nav class="vertical-nav">
       <div class="icon-nav" style="overflow-y: scroll">
@@ -29,6 +29,7 @@
         <div class="login-banner">
           <div>Signed in as {{ userName }}</div>
           <button
+            v-if="isSignedIn()"
             class="button is-danger"
             @click="doLogout"
             @keypress="doLogout"
@@ -73,7 +74,7 @@
       <template v-if="userName" slot="end">
         <b-navbar-item tag="div" class="flex flex-row flex-wrap items-center">
           <div>Signed in as {{ userName }}</div>
-          <div class="flex flex-row flex-grow">
+          <div v-if="isSignedIn()" class="flex flex-row flex-grow">
             <div class="flex-grow" />
             <button
               class="button is-danger"
@@ -93,21 +94,10 @@
 
 <script lang="ts">
 import { Component, Vue } from 'nuxt-property-decorator'
-import { logOut } from '~/service/auth'
+import { cotter, logOut } from '~/service/auth'
 
-@Component<AppLayout>({
-  watch: {
-    isReady() {
-      const isAuthReady = this.$store.state.isAuthReady
-      this.$nextTick(() => {
-        this.isReady = isAuthReady
-      })
-    },
-  },
-})
+@Component
 export default class AppLayout extends Vue {
-  isReady = false
-
   get navItems() {
     return [
       {
@@ -171,6 +161,10 @@ export default class AppLayout extends Vue {
   get userName(): string {
     // return this.$accessor.user || ''
     return this.$store.state.user
+  }
+
+  isSignedIn() {
+    return !!cotter
   }
 
   async doLogout() {

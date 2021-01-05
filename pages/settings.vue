@@ -54,18 +54,13 @@
         </div>
 
         <div class="flex flex-row">
-          <button
-            class="button is-success"
-            :disabled="!email"
-            type="submit"
-            aria-label="save"
-          >
+          <button class="button is-success" type="submit" aria-label="save">
             Save
           </button>
         </div>
       </form>
 
-      <div v-if="isSignedIn" class="container w-full danger-zone">
+      <div v-if="isSignedIn()" class="container w-full danger-zone">
         <h3 class="title is-4 is-danger">Danger Zone</h3>
 
         <form
@@ -138,7 +133,8 @@ export default class SettingsPage extends Vue {
   sentenceLength = this.clone(this.sentenceLengthRange)
 
   get email() {
-    return this.$accessor.user || null
+    // return this.$accessor.user || ''
+    return this.$store.state.user
   }
 
   async created() {

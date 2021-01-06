@@ -112,13 +112,11 @@
           </div>
         </div>
         <div class="column is-6">
-          <b-field label="Filter">
-            <b-input
-              v-model="q"
-              placeholder="Enter keywords to filter"
-              type="search"
-            />
-          </b-field>
+          <form @submit.prevent="reload">
+            <b-field label="Filter">
+              <b-input v-model="q" placeholder="Try level:10" type="search" />
+            </b-field>
+          </form>
         </div>
       </div>
 

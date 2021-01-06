@@ -112,16 +112,11 @@
           </div>
         </div>
         <div class="column is-6">
-          <b-field label="Filter by tags">
-            <b-taginput
-              v-model="selectedTags"
-              icon="tag"
-              placeholder="Add a tag"
-              :data="filteredTags"
-              autocomplete
-              :allow-new="false"
-              open-on-focus
-              @typing="getFilteredTags"
+          <b-field label="Filter">
+            <b-input
+              v-model="q"
+              placeholder="Enter keywords to filter"
+              type="search"
             />
           </b-field>
         </div>
@@ -181,141 +176,9 @@
         </div>
       </b-collapse>
 
-      <b-collapse class="card" animation="slide" :open.sync="isTableShown">
-        <div
-          slot="trigger"
-          slot-scope="props"
-          class="card-header"
-          role="button"
-        >
-          <p class="card-header-title">
-            {{ props.open ? 'Hide items' : 'Show items' }}
-          </p>
-          <a role="button" class="card-header-icon">
-            <fontawesome :icon="props.open ? 'caret-down' : 'caret-up'" />
-          </a>
-        </div>
-        <div class="card-content">
-          <b-table
-            :data="tablePagedData"
-            paginated
-            backend-pagination
-            :total="tableAllData.length"
-            :per-page="perPage"
-            :current-page.sync="page"
-            @contextmenu="onTableContextmenu"
-          >
-            <b-table-column
-              v-slot="props"
-              field="type"
-              label="Type"
-              width="100"
-              sortable
-            >
-              {{ props.row.type }}
-            </b-table-column>
-            <b-table-column v-slot="props" field="entry" label="Entry" sortable>
-              {{ props.row.entry }}
-            </b-table-column>
-            <b-table-column
-              v-slot="props"
-              field="direction"
-              label="Direction"
-              sortable
-            >
-              <span v-if="props.row.direction === 'ec'"> English-Chinese </span>
-              <span v-else-if="props.row.direction === 'te'">
-                Traditional-English
-              </span>
-              <span v-else-if="props.row.type === 'vocab'">
-                Simplified-English
-              </span>
-              <span v-else>Chinese-English</span>
-            </b-table-column>
-            <b-table-column v-slot="props" field="tag" label="Tag">
-              <b-tag v-for="t in props.row.tag || []" :key="t">
-                {{ t }}
-              </b-tag>
-            </b-table-column>
-            <b-table-column
-              v-slot="props"
-              field="srsLevel"
-              label="SRS Level"
-              sortable
-            >
-              {{ props.row.srsLevel }}
-            </b-table-column>
-            <b-table-column
-              v-slot="props"
-              field="nextReview"
-              label="Next Review"
-              sortable
-            >
-              {{ props.row.nextReview | formatDate }}
-            </b-table-column>
-          </b-table>
-        </div>
-      </b-collapse>
-
-      <b-modal :active.sync="isEditTagModal" @close="onEditTagModelClose">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-header-title">Edit tags</div>
-          </div>
-          <div class="card-content">
-            <b-taginput
-              v-if="selectedRow"
-              v-model="selectedRow.tag"
-              icon="tag"
-              placeholder="Add a tag"
-              :data="filteredTags"
-              autocomplete
-              :allow-new="true"
-              open-on-focus
-              @typing="getFilteredTags"
-            />
-            <div class="field taginput-field">
-              <b-button @click="isEditTagModal = false">Close</b-button>
-            </div>
-          </div>
-        </div>
-      </b-modal>
-
       <QuizCard ref="quizCard" :quiz-array="quizArray" @quiz:ended="reload" />
 
       <b-loading :active="isLoading" />
-
-      <client-only>
-        <vue-context ref="contextmenu" lazy>
-          <li>
-            <a
-              role="button"
-              @click.prevent="speak(selectedRow.entry)"
-              @keypress.prevent="speak(selectedRow.entry)"
-            >
-              Speak
-            </a>
-          </li>
-          <li>
-            <a
-              role="button"
-              @click.prevent="isEditTagModal = true"
-              @keypress.prevent="isEditTagModal = true"
-            >
-              Edit tags
-            </a>
-          </li>
-          <li>
-            <a
-              role="button"
-              @click.prevent="removeItem"
-              @keypress.prevent="removeItem"
-            >
-              Remove item
-            </a>
-          </li>
-        </vue-context>
-      </client-only>
     </div>
   </section>
 </template>
@@ -323,19 +186,7 @@
 <script lang="ts">
 import { Component, Ref, Vue } from 'nuxt-property-decorator'
 
-import { speak } from '~/assets/speak'
 import QuizCard, { IQuizData, IQuizType } from '~/components/QuizCard.vue'
-
-interface ITableRow {
-  quizId: string
-  templateId?: string
-  type?: string
-  entry?: string
-  direction?: string
-  tag: string[]
-  srsLevel?: number
-  nextReview?: string
-}
 
 @Component<QuizPage>({
   layout: 'logged-in',
@@ -343,9 +194,6 @@ interface ITableRow {
     this.init().then(() => {
       this.isQuizDashboardReady = true
     })
-  },
-  beforeDestroy() {
-    window.onkeypress = null
   },
   watch: {
     type: {
@@ -369,14 +217,6 @@ interface ITableRow {
     isDue() {
       this.reload()
     },
-    isTableShown() {
-      if (this.isTableShown) {
-        this.updateTable()
-      }
-    },
-    page() {
-      this.updateTable()
-    },
   },
 })
 export default class QuizPage extends Vue {
@@ -386,9 +226,7 @@ export default class QuizPage extends Vue {
   isInit = false
   isQuizDashboardReady = false
 
-  selectedTags: string[] = []
-  filteredTags: string[] = []
-  allTags: string[] = []
+  q = ''
 
   type: IQuizType[] = ['hanzi', 'vocab', 'sentence', 'extra']
   stage = ['new', 'leech', 'learning']
@@ -396,15 +234,6 @@ export default class QuizPage extends Vue {
   isDue = true
 
   dueIn: Date | null = null
-
-  tablePagedData: ITableRow[] = []
-
-  perPage = 10
-  page = 1
-  isTableShown = false
-
-  selectedRow: ITableRow | null = null
-  isEditTagModal = false
 
   quizArray: string[] = []
 
@@ -500,40 +329,29 @@ export default class QuizPage extends Vue {
   }
 
   async init() {
-    await Promise.all([
-      (async () => {
-        const {
-          'settings.quiz': { type, stage, direction, isDue } = {} as any,
-        } = await this.$axios.$get('/api/user', {
-          params: {
-            select: ['settings.quiz'],
-          },
-        })
+    const {
+      'settings.quiz': { type, stage, direction, isDue } = {} as any,
+    } = await this.$axios.$get('/api/user', {
+      params: {
+        select: ['settings.quiz'],
+      },
+    })
 
-        if (type) {
-          this.$set(this, 'type', type)
-        }
+    if (type) {
+      this.$set(this, 'type', type)
+    }
 
-        if (stage) {
-          this.$set(this, 'stage', stage)
-        }
+    if (stage) {
+      this.$set(this, 'stage', stage)
+    }
 
-        if (direction) {
-          this.$set(this, 'direction', direction)
-        }
+    if (direction) {
+      this.$set(this, 'direction', direction)
+    }
 
-        if (typeof isDue !== 'undefined') {
-          this.$set(this, 'isDue', isDue)
-        }
-        // eslint-disable-next-line no-console
-      })().catch(console.error),
-      (async () => {
-        const { tags = [] } = await this.$axios.$get('/api/quiz/allTags')
-        this.allTags = tags
-
-        // eslint-disable-next-line no-console
-      })().catch(console.error),
-    ])
+    if (typeof isDue !== 'undefined') {
+      this.$set(this, 'isDue', isDue)
+    }
 
     this.isInit = true
     this.isLoading = false
@@ -552,7 +370,7 @@ export default class QuizPage extends Vue {
           stage: this.stage,
           direction: this.direction,
           isDue: this.isDue,
-          tag: this.selectedTags,
+          q: this.q,
         },
       },
     })
@@ -570,139 +388,8 @@ export default class QuizPage extends Vue {
     this.dueIn = dueIn ? new Date(dueIn) : null
   }
 
-  getFilteredTags(text: string) {
-    this.filteredTags = this.allTags.filter((t) => {
-      return t.toLocaleLowerCase().startsWith(text.toLocaleLowerCase())
-    })
-  }
-
-  onTableContextmenu(row: any, evt: MouseEvent) {
-    evt.preventDefault()
-
-    this.selectedRow = row
-    ;(this.$refs.contextmenu as any).open(evt)
-  }
-
-  removeItem() {
-    const { quizId } = this.selectedRow || {}
-
-    if (quizId) {
-      this.$buefy.dialog.confirm({
-        message: 'Are you sure you want to remove this item?',
-        confirmText: 'Remove',
-        type: 'is-danger',
-        hasIcon: true,
-        onConfirm: async () => {
-          await this.$axios.$delete('/api/quiz', {
-            params: {
-              id: quizId,
-            },
-          })
-
-          delete this.quizData[quizId]
-          this.$set(this, 'quizData', this.quizData)
-        },
-      })
-    }
-  }
-
-  async onEditTagModelClose() {
-    if (!this.selectedRow) {
-      return
-    }
-
-    const { quizId, tag } = this.selectedRow
-
-    await this.$axios.$patch(
-      '/api/quiz',
-      {
-        set: { tag },
-      },
-      {
-        params: {
-          id: quizId,
-        },
-      }
-    )
-
-    if (this.quizData[quizId]) {
-      this.$set(this.quizData[quizId], '_meta.tag', tag)
-    }
-  }
-
   async startQuiz() {
     await this.quizCard.startQuiz()
-  }
-
-  async speak(s: string) {
-    if (s) {
-      await speak(s)
-    }
-  }
-
-  async updateTable() {
-    const doLoad = () => {
-      this.tablePagedData = this.tableAllData
-        .slice((this.page - 1) * this.perPage, this.page * this.perPage)
-        .map((q) => {
-          const d = this.quizData[q.id]
-
-          return {
-            quizId: q.id,
-            type: d.type,
-            entry: d.entry,
-            direction: d.direction,
-            tag: d.tag || [],
-            srsLevel: d.srsLevel,
-            nextReview: d.nextReview,
-          }
-        })
-      this.$set(this, 'tablePagedData', this.tablePagedData)
-    }
-
-    doLoad()
-
-    if (this.tablePagedData.length > 0) {
-      const { result } = await this.$axios.$get<{
-        result: IQuizData[]
-      }>('/api/quiz/many', {
-        params: {
-          ids: this.tablePagedData
-            .map(({ quizId }) => {
-              const q = this.quizData[quizId]
-              if (!q || !q.entry || !q.type || !q.direction) {
-                return quizId
-              }
-              return ''
-            })
-            .filter((id) => id),
-          select: [
-            'id',
-            'entry',
-            'type',
-            'direction',
-            'front',
-            'back',
-            'mnemonic',
-            'tag',
-          ],
-        },
-      })
-
-      // eslint-disable-next-line array-callback-return
-      result.map((r) => {
-        let q = this.quizData[r.id]
-        if (q) {
-          Object.assign(q, r)
-        } else {
-          q = r
-        }
-
-        this.$set(this.quizData, r.id, q)
-      })
-
-      doLoad()
-    }
   }
 }
 </script>

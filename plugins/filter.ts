@@ -1,4 +1,4 @@
-import { Duration } from 'native-duration'
+import { Duration } from '~/assets/duration'
 import Vue from 'vue'
 
 Vue.filter('format', (v: any) => {

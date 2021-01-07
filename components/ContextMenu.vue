@@ -10,7 +10,7 @@
         Speak
       </a>
     </li>
-    <li v-if="entries.length && type && !quiz.ids.length">
+    <li v-if="type && quiz.db.length < entries.length">
       <a
         role="button"
         @click.prevent="addToQuiz()"
@@ -19,7 +19,7 @@
         Add to quiz
       </a>
     </li>
-    <li v-if="quiz.ids.length">
+    <li v-if="quiz.db.length">
       <a
         role="button"
         @click.prevent="removeFromQuiz()"
@@ -87,9 +87,11 @@ export default class ContextMenu extends Vue {
       entries: string[]
       type: string
     }
-    ids: string[]
+    db: {
+      ids: string[]
+    }[]
   } = {
-    ids: [],
+    db: [],
   }
 
   get entries() {
@@ -102,16 +104,22 @@ export default class ContextMenu extends Vue {
 
   async setQuiz() {
     if (this.entry && this.type) {
-      const { result } = await this.$axios.$get<{
+      const { result } = await this.$axios.$post<{
         result: {
           id: string
+          entry: string
         }[]
       }>('/api/quiz/many', {
-        params: {
-          entries: this.entries,
-          select: ['id'],
-          type: this.type,
-        },
+        entries: this.entries,
+        select: ['id', 'entry'],
+        type: this.type,
+      })
+
+      const entryMap = new Map<string, string[]>()
+      result.map(({ id, entry }) => {
+        const c = entryMap.get(entry) || []
+        c.push(id)
+        return entryMap.set(entry, c)
       })
 
       this.quiz = {
@@ -119,7 +127,7 @@ export default class ContextMenu extends Vue {
           entries: this.entries,
           type: this.type,
         },
-        ids: result.map((q) => q.id),
+        db: Array.from(entryMap.values()).map((ids) => ({ ids })),
       }
     }
   }
@@ -163,8 +171,11 @@ export default class ContextMenu extends Vue {
 
   async addToQuiz() {
     if (this.entries.length && this.type) {
-      const { ids } = await this.$axios.$put<{
-        ids: string[]
+      const { result } = await this.$axios.$put<{
+        result: {
+          ids: string[]
+          entry: string
+        }[]
       }>('/api/quiz', {
         entries: this.entries,
         type: this.type,
@@ -178,21 +189,26 @@ export default class ContextMenu extends Vue {
 
       this.quiz = {
         ...this.quiz,
-        ids,
+        db: result,
       }
 
       this.$emit('quiz:added', {
         entries: this.entries,
         type: this.type,
-        ids,
+        db: result,
       })
     }
   }
 
   async removeFromQuiz() {
-    if (this.entries.length && this.type && this.quiz.ids.length) {
+    const ids = this.quiz.db.reduce(
+      (prev, c) => [...prev, ...c.ids],
+      [] as string[]
+    )
+
+    if (this.entries.length && this.type && ids.length) {
       await this.$axios.$post('/api/quiz/delete', {
-        ids: this.quiz.ids,
+        ids,
       })
 
       this.$buefy.snackbar.open(
@@ -201,16 +217,16 @@ export default class ContextMenu extends Vue {
         }  from quiz`
       )
 
-      const { ids } = this.quiz
+      const { db } = this.quiz
       this.quiz = {
         ...this.quiz,
-        ids: [],
+        db: [],
       }
 
       this.$emit('quiz:removed', {
         entries: this.entries,
         type: this.type,
-        ids,
+        db,
       })
     }
   }

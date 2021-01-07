@@ -8,7 +8,7 @@
             class="input"
             type="search"
             name="q"
-            placeholder="Type here to search."
+            placeholder="Type here to search"
             aria-label="search"
           />
         </div>

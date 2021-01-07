@@ -102,13 +102,28 @@ import ContextMenu from '~/components/ContextMenu.vue'
 @Component<LibraryPage>({
   layout: 'logged-in',
   watch: {
-    q() {
-      this.currentData = []
-      this.reload([])
+    currentData() {
+      this.reload(this.currentData)
     },
   },
-  created() {
-    this.reload([])
+  async created() {
+    const [r1, r2] = await Promise.all([
+      this.$axios.$get('/api/library/library.json'),
+      fetch(
+        `https://zhquiz.github.io/libraryx.json?${encodeURIComponent(
+          Math.random().toString(36).substr(2)
+        )}`
+      ).then((r) => r.json()),
+    ])
+
+    this.collapses = [...r1, ...r2]
+    const titles = this.collapses
+      .map((r) => r.title)
+      .filter((a, i, arr) => arr.indexOf(a) === i)
+
+    this.collapses = this.collapses.filter(
+      (a, i) => titles.indexOf(a.title) === i
+    )
   },
 })
 export default class LibraryPage extends Vue {
@@ -128,93 +143,21 @@ export default class LibraryPage extends Vue {
   cIndex = 0
   cSubIndex = -1
 
-  collapses = [
-    {
-      title: 'HSK',
-      children: [
-        {
-          title: 'HSK1',
-          q: 'tag:HSK1',
-        },
-        {
-          title: 'HSK2',
-          q: 'tag:HSK2',
-        },
-        {
-          title: 'HSK3',
-          q: 'tag:HSK3',
-        },
-        {
-          title: 'HSK4 (Set 1)',
-          q: 'tag:HSK4 tag:HSK4_set1',
-        },
-        {
-          title: 'HSK4 (Set 2)',
-          q: 'tag:HSK4 NOT tag:HSK4_set1',
-        },
-        {
-          title: 'HSK5 (Set 1)',
-          q: 'tag:HSK5 tag:HSK5_set1',
-        },
-        {
-          title: 'HSK5 (Set 2)',
-          q: 'tag:HSK5 tag:HSK5_set2',
-        },
-        {
-          title: 'HSK5 (Set 3)',
-          q: 'tag:HSK5 tag:HSK5_set3',
-        },
-        {
-          title: 'HSK5 (Set 4)',
-          q: 'tag:HSK5 NOT (tag:HSK5_set1 OR tag:HSK5_set2 OR tag:HSK5_set3)',
-        },
-        {
-          title: 'HSK6 (Set 1)',
-          q: 'tag:HSK6 tag:HSK6_set1',
-        },
-        {
-          title: 'HSK6 (Set 2)',
-          q: 'tag:HSK6 tag:HSK6_set2',
-        },
-        {
-          title: 'HSK6 (Set 3)',
-          q: 'tag:HSK6 tag:HSK6_set3',
-        },
-        {
-          title: 'HSK6 (Set 4)',
-          q: 'tag:HSK6 tag:HSK6_set4',
-        },
-        {
-          title: 'HSK6 (Set 5)',
-          q:
-            'tag:HSK6 NOT (tag:HSK6_set1 OR tag:HSK6_set2 OR tag:HSK6_set3 OR tag:HSK6_set4)',
-        },
-      ],
-    },
-  ]
+  collapses: {
+    title: string
+    children: {
+      title: string
+      entries: string[]
+    }[]
+  }[] = []
 
-  currentData: string[] = []
-
-  get q() {
-    return this.collapses[this.cIndex]?.children[this.cSubIndex]?.q || ''
+  get currentData() {
+    return (
+      this.collapses[this.cIndex]?.children[this.cSubIndex]?.entries || []
+    ).filter((a, i, arr) => arr.indexOf(a) === i)
   }
 
   async reload(entries: string[]) {
-    if (this.currentData.length === 0 && this.q) {
-      const { result } = await this.$axios.$get<{
-        result: {
-          entry: string
-        }[]
-      }>('/api/library/q', {
-        params: {
-          q: this.q,
-        },
-      })
-
-      this.currentData = result.map((r) => r.entry)
-      entries = this.currentData
-    }
-
     if (entries.length > 0) {
       const {
         result = [],

@@ -182,7 +182,7 @@ export default class ContextMenu extends Vue {
       })
 
       this.$buefy.snackbar.open(
-        `Added ${this.type}: ${this.entries.slice(0, 3).join(',')}${
+        `Added ${this.type}: ${this.entries.slice(0, 3).join(', ')}${
           this.entries.length > 3 ? '...' : ''
         } to quiz`
       )
@@ -212,7 +212,7 @@ export default class ContextMenu extends Vue {
       })
 
       this.$buefy.snackbar.open(
-        `Removed ${this.type}: ${this.entries.slice(0, 3).join(',')}${
+        `Removed ${this.type}: ${this.entries.slice(0, 3).join(', ')}${
           this.entries.length > 3 ? '...' : ''
         }  from quiz`
       )

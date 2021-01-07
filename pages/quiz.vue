@@ -114,7 +114,11 @@
         <div class="column is-6">
           <form @submit.prevent="reload">
             <b-field label="Filter">
-              <b-input v-model="q" placeholder="Try level:10" type="search" />
+              <b-input
+                v-model="q"
+                placeholder="Try level:10 or tag:HSK4"
+                type="search"
+              />
             </b-field>
           </form>
         </div>

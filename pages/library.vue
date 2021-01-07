@@ -107,16 +107,49 @@ export default class LibraryPage extends Vue {
       q: 'tag:HSK3',
     },
     {
-      title: 'HSK4',
-      q: 'tag:HSK4',
+      title: 'HSK4 (Set 1)',
+      q: 'tag:HSK4 tag:HSK4_set1',
     },
     {
-      title: 'HSK5',
-      q: 'tag:HSK5',
+      title: 'HSK4 (Set 2)',
+      q: 'tag:HSK4 NOT tag:HSK4_set1',
     },
     {
-      title: 'HSK6',
-      q: 'tag:HSK6',
+      title: 'HSK5 (Set 1)',
+      q: 'tag:HSK5 tag:HSK5_set1',
+    },
+    {
+      title: 'HSK5 (Set 2)',
+      q: 'tag:HSK5 tag:HSK5_set2',
+    },
+    {
+      title: 'HSK5 (Set 3)',
+      q: 'tag:HSK5 tag:HSK5_set3',
+    },
+    {
+      title: 'HSK5 (Set 4)',
+      q: 'tag:HSK5 NOT (tag:HSK5_set1 OR tag:HSK5_set2 OR tag:HSK5_set3)',
+    },
+    {
+      title: 'HSK6 (Set 1)',
+      q: 'tag:HSK6 tag:HSK6_set1',
+    },
+    {
+      title: 'HSK6 (Set 2)',
+      q: 'tag:HSK6 tag:HSK6_set2',
+    },
+    {
+      title: 'HSK6 (Set 3)',
+      q: 'tag:HSK6 tag:HSK6_set3',
+    },
+    {
+      title: 'HSK6 (Set 4)',
+      q: 'tag:HSK6 tag:HSK6_set4',
+    },
+    {
+      title: 'HSK6 (Set 5)',
+      q:
+        'tag:HSK6 NOT (tag:HSK6_set1 OR tag:HSK6_set2 OR tag:HSK6_set3 OR tag:HSK6_set4)',
     },
   ]
 

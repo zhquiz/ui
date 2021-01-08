@@ -540,8 +540,11 @@ export default class QuizCard extends Vue {
                 return {
                   traditional: result
                     .map(({ traditional }) => traditional!)
-                    .filter((r) => r),
-                  pinyin: result.map(({ pinyin }) => pinyin),
+                    .filter((r) => r)
+                    .filter((a, i, arr) => arr.indexOf(a) === i),
+                  pinyin: result
+                    .map(({ pinyin }) => pinyin)
+                    .filter((a, i, arr) => arr.indexOf(a) === i),
                   english: result.map(({ english }) => english),
                 }
               }))

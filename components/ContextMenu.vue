@@ -5,7 +5,7 @@
         {{ a.name }}
       </a>
     </li>
-    <li class="separator">
+    <li v-if="additional.length" class="separator">
       <a></a>
     </li>
     <li v-if="entries.length === 1">

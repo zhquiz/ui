@@ -51,7 +51,7 @@
       ref="context"
       :entry="selected.entry"
       :type="selected.type"
-      :reload="selected.reload"
+      :additional="selected.additional"
     />
   </section>
 </template>
@@ -65,9 +65,9 @@ import ContextMenu from '~/components/ContextMenu.vue'
   layout: 'logged-in',
   mounted() {
     Promise.all([
-      this.hanzi.reload(),
-      this.vocab.reload(),
-      this.sentence.reload(),
+      this.hanzi.additional[0].handler(),
+      this.vocab.additional[0].handler(),
+      this.sentence.additional[0].handler(),
     ])
   },
 })
@@ -78,65 +78,83 @@ export default class RandomPage extends Vue {
     type: 'hanzi',
     entry: '',
     english: '',
-    reload: async () => {
-      const { result, english = '' } = await this.$axios.$get(
-        '/api/hanzi/random',
-        {
-          params: {
-            levelMin: this.$accessor.settings.levelMin,
-            level: this.$accessor.settings.level,
-          },
-        }
-      )
+    additional: [
+      {
+        name: 'Reload',
+        handler: async () => {
+          const { result, english = '' } = await this.$axios.$get(
+            '/api/hanzi/random',
+            {
+              params: {
+                levelMin: this.$accessor.settings.levelMin,
+                level: this.$accessor.settings.level,
+              },
+            }
+          )
 
-      this.hanzi.entry = result
-      this.hanzi.english = english
-    },
+          this.hanzi.entry = result
+          this.hanzi.english = english
+        },
+      },
+    ],
   }
 
   vocab = {
     type: 'vocab',
     entry: '',
     english: '',
-    reload: async () => {
-      const { result, english = '' } = await this.$axios.$get(
-        '/api/vocab/random',
-        {
-          params: {
-            levelMin: this.$accessor.settings.levelMin,
-            level: this.$accessor.settings.level,
-          },
-        }
-      )
+    additional: [
+      {
+        name: 'Reload',
+        handler: async () => {
+          const { result, english = '' } = await this.$axios.$get(
+            '/api/vocab/random',
+            {
+              params: {
+                levelMin: this.$accessor.settings.levelMin,
+                level: this.$accessor.settings.level,
+              },
+            }
+          )
 
-      this.vocab.entry = result
-      this.vocab.english = english
-    },
+          this.vocab.entry = result
+          this.vocab.english = english
+        },
+      },
+    ],
   }
 
   sentence = {
     type: 'sentence',
     entry: '',
     english: '',
-    reload: async () => {
-      const { result, english = '' } = await this.$axios.$get(
-        '/api/sentence/random',
-        {
-          params: {
-            levelMin: this.$accessor.settings.levelMin,
-            level: this.$accessor.settings.level,
-          },
-        }
-      )
-      this.sentence.entry = result
-      this.sentence.english = english
-    },
+    additional: [
+      {
+        name: 'Reload',
+        handler: async () => {
+          const { result, english = '' } = await this.$axios.$get(
+            '/api/sentence/random',
+            {
+              params: {
+                levelMin: this.$accessor.settings.levelMin,
+                level: this.$accessor.settings.level,
+              },
+            }
+          )
+          this.sentence.entry = result
+          this.sentence.english = english
+        },
+      },
+    ],
   }
 
   selected: {
     type?: string
     entry?: string
-    reload?: () => void
+    additional?: {
+      name: string
+      handler: () => void
+    }[]
   } = {}
 
   openContext(evt: MouseEvent, type: 'hanzi' | 'vocab' | 'sentence') {

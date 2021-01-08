@@ -91,22 +91,11 @@
 
         <div v-show="isQuizShownAnswer" class="content">
           <div v-if="current.type === 'hanzi'">
-            <div v-if="current.direction === 'ec'">
-              <div
-                class="hanzi-display has-context"
-                @contextmenu.prevent="openContext"
-              >
-                {{ current.entry }}
-              </div>
-            </div>
-            <div v-else>
-              <div
-                class="font-chinese text-w-normal has-context"
-                style="font-size: 3rem"
-                @contextmenu.prevent="openContext"
-              >
-                {{ current.entry }}
-              </div>
+            <div
+              class="hanzi-display has-context"
+              @contextmenu.prevent="openContext"
+            >
+              {{ current.entry }}
             </div>
 
             <div>
@@ -322,6 +311,7 @@ export interface IQuizData {
   direction?: string
   srsLevel?: number
   nextReview?: string
+  wrongStreak?: number
   stat?: any
   entry?: string
   tag?: string[]

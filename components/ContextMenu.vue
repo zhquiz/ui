@@ -1,9 +1,12 @@
 <template>
   <vue-context ref="contextmenu" lazy>
-    <li v-if="reload">
-      <a role="button" @click.prevent="reload" @keypress.prevent="reload">
-        Reload
+    <li v-for="(a, i) in additional" :key="i">
+      <a role="button" @click.prevent="a.handler" @keypress.prevent="a.handler">
+        {{ a.name }}
       </a>
+    </li>
+    <li class="separator">
+      <a></a>
     </li>
     <li v-if="entries.length === 1">
       <a role="button" @click.prevent="doSpeak()" @keypress.prevent="doSpeak()">
@@ -28,21 +31,33 @@
         Remove from quiz
       </a>
     </li>
-    <li v-if="entries.length === 1 && type != 'hanzi'">
-      <nuxt-link
-        :to="{ path: '/vocab', query: { q: entries[0] } }"
-        target="_blank"
-      >
-        Search for vocab
-      </nuxt-link>
+    <li v-if="entries.length === 1" class="separator">
+      <a></a>
     </li>
     <li v-if="entries.length === 1">
       <nuxt-link
         :to="{ path: '/hanzi', query: { q: entries[0] } }"
         target="_blank"
       >
-        Search for Hanzi
+        Search as Hanzi
       </nuxt-link>
+    </li>
+    <li v-if="entries.length === 1 && type != 'hanzi'">
+      <nuxt-link
+        :to="{ path: '/vocab', query: { q: entries[0] } }"
+        target="_blank"
+      >
+        Search as vocab
+      </nuxt-link>
+    </li>
+    <li v-if="entries.length === 1 && type !== 'sentence'">
+      <a
+        :href="`https://en.wiktionary.org/wiki/${entries[0]}`"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Open in wiktionary
+      </a>
     </li>
     <li v-if="entries.length === 1">
       <a
@@ -76,7 +91,11 @@ export default class ContextMenu extends Vue {
   @Prop() id?: string
   @Prop() entry?: string | string[]
   @Prop() type?: string
-  @Prop() reload?: () => void
+
+  @Prop({ default: () => [] }) additional!: {
+    name: string
+    handler: () => void
+  }[]
 
   @Ref() contextmenu!: {
     open: (evt: MouseEvent) => void
@@ -232,3 +251,22 @@ export default class ContextMenu extends Vue {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.v-context {
+  li.separator {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+
+    a {
+      background-color: lightgray;
+      height: 1px;
+      width: calc(100% - 1rem);
+      padding: 0;
+    }
+  }
+}
+</style>

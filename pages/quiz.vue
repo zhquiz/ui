@@ -253,7 +253,7 @@ export default class QuizPage extends Vue {
     this.cache.now = +new Date()
     return this.quizArray.filter((id) => {
       const d = this.quizData[id]
-      return d && this._isBacklogSeverity
+      return d && d.nextReview && +new Date(d.nextReview) < this.cache.now
     })
   }
 
@@ -271,63 +271,8 @@ export default class QuizPage extends Vue {
   get leechItems() {
     return this.quizArray.filter((id) => {
       const d = this.quizData[id]
-      return d && this._isLeechSeverity(d)
+      return d && d.wrongStreak && d.wrongStreak > 2
     })
-  }
-
-  /**
-   * Between 0 - 1
-   */
-  _isSeverity(s: number) {
-    if (s > 1 || s <= 0) {
-      throw new Error('Cannot compare severity')
-    }
-
-    return s
-  }
-
-  _isBacklogSeverity(d: IQuizData) {
-    if (!d.nextReview) {
-      return 0
-    }
-
-    const s = (this.cache.now - +new Date(d.nextReview)) / this.cache.now
-    if (s > 0) {
-      return this._isSeverity(s)
-    }
-
-    return 0
-  }
-
-  _isLeechSeverity(d: IQuizData) {
-    const { wrong } = (d.stat || {}).streak || {}
-    if (typeof wrong === 'number' && wrong >= 3)
-      return this._isSeverity(wrong / 10)
-
-    return null
-  }
-
-  get tableAllData() {
-    this.cache.now = +new Date()
-
-    return this.quizArray
-      .map((id) => this.quizData[id])
-      .sort((a, b) => {
-        const s = [a, b].map((el) => {
-          const s1 = this._isLeechSeverity(el)
-          if (s1) return s1 + 5
-
-          const s2 = this._isBacklogSeverity(el)
-          if (s2) return s2 + 3
-
-          const s3 = el.srsLevel
-          if (typeof s3 !== 'undefined') return 1 - s3 / 10
-
-          return -(el.nextReview ? new Date(el.nextReview) : Infinity)
-        })
-
-        return s[1] - s[0]
-      })
   }
 
   async init() {
@@ -365,7 +310,10 @@ export default class QuizPage extends Vue {
     const {
       quiz,
       upcoming: [{ nextReview: dueIn } = {} as any] = [],
-    } = await this.$axios.$get('/api/quiz/init', {
+    } = await this.$axios.$get<{
+      quiz: IQuizData[]
+      upcoming: IQuizData[]
+    }>('/api/quiz/init', {
       params: {
         _: {
           type: this.type,
@@ -379,9 +327,9 @@ export default class QuizPage extends Vue {
 
     this.quizArray = []
     // eslint-disable-next-line array-callback-return
-    quiz.map(({ id, nextReview, srsLevel, stat }: any) => {
-      this.quizArray.push(id)
-      this.quizData[id] = { id, nextReview, srsLevel, stat }
+    quiz.map((it) => {
+      this.quizArray.push(it.id)
+      this.quizData[it.id] = it
     })
 
     this.$set(this, 'quizArray', this.quizArray)

@@ -1,220 +1,154 @@
 <template>
   <section>
     <div class="LibraryPage">
-      <h2 class="title is-2">Library</h2>
-      <b-collapse
-        v-for="(c, i) of collapses"
-        :key="i"
-        class="card"
-        animation="slide"
-        :open="cIndex == i"
-        @open="cIndex = i"
-      >
-        <div
-          slot="trigger"
-          slot-scope="props"
-          class="card-header"
-          role="button"
-        >
-          <p
-            class="card-header-title"
-            @contextmenu.prevent="
-              (evt) => {
-                selected = currentData
-                $refs.context.open(evt)
-              }
-            "
-          >
-            {{ c.title }}
-          </p>
-          <a class="card-header-icon">
-            <b-icon :icon="props.open ? 'caret-down' : 'caret-up'"> </b-icon>
-          </a>
-        </div>
-        <div class="card-content top-card-content">
-          <b-collapse
-            v-for="(c0, j) of c.children"
-            :key="j"
-            class="card"
-            animation="slide"
-            :open="cSubIndex == j"
-            @open="cSubIndex = j"
-          >
-            <div
-              slot="trigger"
-              slot-scope="props"
-              class="card-header"
-              role="button"
-            >
-              <p
-                class="card-header-title"
-                @contextmenu.prevent="
-                  (evt) => {
-                    selected = currentData
-                    $refs.context.open(evt)
-                  }
-                "
-              >
-                {{ c0.title }}
-              </p>
-              <a class="card-header-icon">
-                <b-icon :icon="props.open ? 'caret-down' : 'caret-up'">
-                </b-icon>
-              </a>
-            </div>
-            <div class="card-content">
-              <div>
-                <span
-                  v-for="t in currentData"
-                  :key="t"
-                  class="tag clickable"
-                  :class="getTagClass(t)"
-                  @contextmenu.prevent="
-                    (evt) => {
-                      selected = [t]
-                      $refs.context.open(evt)
-                    }
-                  "
-                >
-                  {{ t }}
-                </span>
-              </div>
-            </div>
-          </b-collapse>
-        </div>
-      </b-collapse>
-    </div>
+      <form class="field is-grouped" @submit.prevent="q = q0">
+        <b-field class="is-expanded" label="Search" label-position="on-border">
+          <input
+            v-model="q0"
+            class="input"
+            type="search"
+            name="q"
+            placeholder="Type here to search"
+            aria-label="search"
+          />
+        </b-field>
+      </form>
 
-    <ContextMenu
-      ref="context"
-      type="vocab"
-      :entry="selected"
-      @quiz:added="(evt) => reload(evt.entries)"
-      @quiz:removed="(evt) => reload(evt.entries)"
-    />
+      <div class="columns">
+        <div class="column">
+          <section>
+            <LibraryCard
+              v-for="(it, i) in local.result"
+              :key="i"
+              :title="it.title"
+              :entries="it.entries"
+            />
+          </section>
+
+          <b-pagination
+            v-if="local.count > local.perPage"
+            v-model="local.page"
+            :total="local.count"
+            :per-page="local.perPage"
+            icon-prev="angle-left"
+            icon-next="angle-right"
+            @change="(p) => (local.page = p)"
+          />
+        </div>
+        <div class="column">
+          <section>
+            <LibraryCard
+              v-for="(it, i) in online.result"
+              :key="i"
+              :title="it.title"
+              :entries="it.entries"
+            />
+          </section>
+
+          <b-pagination
+            v-if="online.count > online.perPage"
+            v-model="online.page"
+            :total="online.count"
+            :per-page="online.perPage"
+            icon-prev="angle-left"
+            icon-next="angle-right"
+            @change="(p) => (online.page = p)"
+          />
+        </div>
+      </div>
+    </div>
   </section>
 </template>
 
 <script lang="ts">
-import { Component, Ref, Vue } from 'nuxt-property-decorator'
-import ContextMenu from '~/components/ContextMenu.vue'
+import { Component, Vue, Watch } from 'nuxt-property-decorator'
 
 @Component<LibraryPage>({
   layout: 'logged-in',
-  watch: {
-    currentData() {
-      this.reload(this.currentData)
-    },
-  },
   async created() {
-    const [r1, r2] = await Promise.all([
-      this.$axios.$get('/api/library/library.json'),
-      fetch(
-        `https://zhquiz.github.io/libraryx.json?${encodeURIComponent(
-          Math.random().toString(36).substr(2)
-        )}`
-      ).then((r) => r.json()),
-    ])
-
-    this.collapses = [...r1, ...r2]
-    const titles = this.collapses
-      .map((r) => r.title)
-      .filter((a, i, arr) => arr.indexOf(a) === i)
-
-    this.collapses = this.collapses.filter(
-      (a, i) => titles.indexOf(a.title) === i
-    )
+    await Promise.all([this.updateLocal(), this.updateOnline()])
   },
 })
 export default class LibraryPage extends Vue {
-  @Ref() context!: ContextMenu
+  q0 = ''
 
-  selected: string[] = []
-  srsLevel: {
-    [entry: string]: number
-  } = {}
-
-  readonly tagClassMap = [
-    (lv: any) => (lv > 2 ? 'is-success' : ''),
-    (lv: any) => (lv > 0 ? 'is-warning' : ''),
-    (lv: any) => (lv === 0 ? 'is-danger' : ''),
-  ]
-
-  cIndex = 0
-  cSubIndex = -1
-
-  collapses: {
-    title: string
-    children: {
+  local: {
+    result: {
       title: string
       entries: string[]
     }[]
-  }[] = []
-
-  get currentData() {
-    return (
-      this.collapses[this.cIndex]?.children[this.cSubIndex]?.entries || []
-    ).filter((a, i, arr) => arr.indexOf(a) === i)
+    count: number
+    page: number
+    perPage: number
+  } = {
+    result: [],
+    count: 0,
+    page: 1,
+    perPage: 10,
   }
 
-  async reload(entries: string[]) {
-    if (entries.length > 0) {
-      const {
-        result = [],
-      }: {
-        result: {
-          entry: string
-          srsLevel: number | null
-        }[]
-      } = await this.$axios.$post('/api/quiz/srsLevel', {
-        entries,
-        type: 'vocab',
-        select: ['entry', 'srsLevel'],
-      })
+  online: {
+    result: {
+      title: string
+      entries: string[]
+    }[]
+    count: number
+    page: number
+    perPage: number
+  } = {
+    result: [],
+    count: 0,
+    page: 1,
+    perPage: 10,
+  }
 
-      // eslint-disable-next-line array-callback-return
-      entries.map((entry) => {
-        delete this.srsLevel[entry]
-      })
+  get q() {
+    const q = this.$route.query.q
+    return (Array.isArray(q) ? q[0] : q) || ''
+  }
 
-      // eslint-disable-next-line array-callback-return
-      result.map(({ entry, srsLevel }) => {
-        this.srsLevel[entry] = typeof srsLevel === 'number' ? srsLevel : -1
-      })
+  set q(q: string) {
+    this.$router.push({ query: { q } })
+  }
 
-      this.$set(this, 'srsLevel', this.srsLevel)
-      this.$forceUpdate()
+  @Watch('q')
+  @Watch('local.page')
+  async updateLocal() {
+    const r = await this.$axios.$get('/api/library/q', {
+      params: {
+        q: this.q,
+        page: this.local.page,
+        perPage: this.local.perPage,
+      },
+    })
+
+    this.local = {
+      ...this.local,
+      ...r,
     }
   }
 
-  getTagClass(item: string) {
-    const srsLevel = this.srsLevel[item]
+  @Watch('q')
+  @Watch('online.page')
+  async updateOnline() {
+    const r = await this.$axios.$get('https://www.zhquiz.cc/api/library', {
+      params: {
+        q: this.q,
+        page: this.online.page,
+        perPage: this.online.perPage,
+      },
+    })
 
-    if (typeof srsLevel !== 'undefined') {
-      if (srsLevel === -1) {
-        return 'is-info'
-      }
-
-      for (const fn of this.tagClassMap) {
-        const c = fn(srsLevel)
-        if (c) {
-          return c
-        }
-      }
+    this.online = {
+      ...this.online,
+      ...r,
     }
-
-    return 'is-light'
   }
 }
 </script>
 
 <style scoped>
-.tag {
-  margin-right: 0.5rem;
-}
-
-.top-card-content {
-  max-height: 400px;
-  overflow: scroll;
+.column > section {
+  margin-bottom: 1rem;
 }
 </style>

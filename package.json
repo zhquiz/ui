@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "SERVER_PORT=5000 concurrently 'cd ../server && robo dev' nuxt-ts",
+    "dev": "SERVER_PORT=5000 concurrently 'cd ../go-zhquiz && robo dev' nuxt-ts",
     "build": "nuxt-ts generate",
     "lint": "eslint --ext .ts,.js,.vue --ignore-path .gitignore ."
   },

@@ -41,6 +41,7 @@
       ref="context"
       type="vocab"
       :entry="selected"
+      :additional="additional"
       @quiz:added="(evt) => reload(evt.entries)"
       @quiz:removed="(evt) => reload(evt.entries)"
     />
@@ -66,6 +67,11 @@ import ContextMenu from './ContextMenu.vue'
 export default class LibraryCard extends Vue {
   @Prop() title!: string
   @Prop() entries!: string[]
+
+  @Prop({ default: () => [] }) additional!: {
+    name: string
+    handler: () => void
+  }[]
 
   @Ref() context!: ContextMenu
 

@@ -227,6 +227,9 @@ export default class ExtraPage extends Vue {
 
       this.$buefy.snackbar.open(`Added ${type}: ${entry} to quiz`)
     }
+
+    this.isEditModal = false
+    await this.load()
   }
 
   async doUpdate() {
@@ -236,8 +239,9 @@ export default class ExtraPage extends Vue {
       },
     })
 
-    this.$buefy.snackbar.open(`Update extra: ${this.selected.chinese}`)
+    this.$buefy.snackbar.open(`Updated extra: ${this.selected.chinese}`)
 
+    this.isEditModal = false
     await this.load()
   }
 
@@ -247,6 +251,8 @@ export default class ExtraPage extends Vue {
         id: this.selected.id,
       },
     })
+
+    this.$buefy.snackbar.open(`Deleted extra: ${this.selected.chinese}`)
 
     await this.load()
   }
@@ -284,34 +290,6 @@ export default class ExtraPage extends Vue {
 .b-table ::v-deep tr:hover {
   cursor: pointer;
   color: blue;
-}
-
-.new-item-panel {
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.new-item-panel > div {
-  margin-top: 0;
-  margin-left: 0;
-}
-
-.new-item-panel > div + div {
-  margin-left: 1em;
-}
-
-@media screen and (max-width: 1024px) {
-  .new-item-panel {
-    flex-direction: column;
-    align-items: flex-end;
-  }
-
-  .new-item-panel > div + div {
-    margin-top: 1em;
-  }
 }
 
 .button + .button {

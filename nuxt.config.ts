@@ -137,16 +137,9 @@ export default (): NuxtConfig => {
      */
     build: {
       transpile: [/typed-vuex/],
-      extend(config) {
-        if (!config.node) {
-          config.node = {}
-        }
-
-        config.node.fs = 'empty'
-      },
     },
     generate: {
-      dir: '../server/public',
+      dir: '../go-zhquiz/public',
     },
   }
 }

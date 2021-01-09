@@ -7,7 +7,7 @@
             <div v-if="current.direction === 'ec'">
               <h4>Hanzi English-Chinese</h4>
 
-              {{ doMask(current.english, current.entry) }}
+              <div v-html="doMask(current.english, current.entry)"></div>
             </div>
             <div v-else>
               <h4>Hanzi Chinese-English</h4>
@@ -35,16 +35,18 @@
               <h4>Vocab English-Chinese</h4>
 
               <ul>
-                <li v-for="(it, i) in current.english" :key="i">
-                  {{
+                <li
+                  v-for="(it, i) in current.english"
+                  :key="i"
+                  v-html="
                     doMask(
                       it,
                       current.entry,
                       ...current.pinyin,
                       ...current.traditional
                     )
-                  }}
-                </li>
+                  "
+                ></li>
               </ul>
             </div>
             <div v-else>
@@ -75,9 +77,7 @@
             <div v-if="current.direction === 'ec'">
               <h4>Extra English-Chinese</h4>
 
-              <p>
-                {{ current.english }}
-              </p>
+              <div v-html="doMask(current.english, current.entry)"></div>
             </div>
             <div v-else>
               <h4>Extra Chinese-English</h4>
@@ -699,6 +699,13 @@ export default class QuizCard extends Vue {
   margin-left: 1.5rem;
   margin-right: 1.5rem;
   border-bottom: 1px solid hsla(0, 0%, 50%, 0.25);
+
+  scrollbar-width: none; /* For Firefox */
+  -ms-overflow-style: none; /* For Internet Explorer and Edge */
+
+  &::-webkit-scrollbar {
+    width: 0px; /* For Chrome, Safari, and Opera */
+  }
 }
 
 .buttons-panel {

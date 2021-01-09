@@ -184,7 +184,7 @@ export default class LevelPage extends Vue {
     })
 
     if (whatToShow) {
-      this.$set(this, 'whatToShow', whatToShow)
+      this.whatToShow = whatToShow
     }
 
     await this.reload([])

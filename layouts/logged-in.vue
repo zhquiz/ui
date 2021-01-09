@@ -284,6 +284,13 @@ export default class AppLayout extends Vue {
   flex-grow: 1;
   padding: 1rem;
   background-color: rgb(250, 250, 250);
+
+  scrollbar-width: none; /* For Firefox */
+  -ms-overflow-style: none; /* For Internet Explorer and Edge */
+
+  &::-webkit-scrollbar {
+    width: 0px; /* For Chrome, Safari, and Opera */
+  }
 }
 
 @media screen and (max-width: 1024px) {

@@ -192,10 +192,40 @@ import QuizCard, { IQuizData, IQuizType } from '~/components/QuizCard.vue'
 
 @Component<QuizPage>({
   layout: 'logged-in',
-  created() {
-    this.init().then(() => {
-      this.isQuizDashboardReady = true
+  async created() {
+    const r = await this.$axios.$get<{
+      'settings.quiz': {
+        type: IQuizType[]
+        stage: string[]
+        direction: string[]
+        isDue: boolean
+      }
+    }>('/api/user', {
+      params: {
+        select: ['settings.quiz'],
+      },
     })
+
+    const { type, stage, direction, isDue } = r['settings.quiz']
+
+    if (type) {
+      this.type = type
+    }
+
+    if (stage) {
+      this.stage = stage
+    }
+
+    if (direction) {
+      this.direction = direction
+    }
+
+    if (typeof isDue === 'boolean') {
+      this.isDue = isDue
+    }
+
+    await this.init()
+    this.isQuizDashboardReady = true
   },
   watch: {
     type: {
@@ -264,7 +294,7 @@ export default class QuizPage extends Vue {
   get newItems() {
     return this.quizArray.filter((id) => {
       const d = this.quizData[id]
-      return d && typeof d.srsLevel === 'undefined'
+      return d && typeof d.srsLevel !== 'number'
     })
   }
 

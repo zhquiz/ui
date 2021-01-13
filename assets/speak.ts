@@ -1,7 +1,3 @@
-import { api } from '~/service/api'
-
-import { g } from './shared'
-
 const allVoices: Record<string, string> = {}
 
 if (process.client) {
@@ -35,13 +31,9 @@ if (process.client) {
 }
 
 export async function speak(s: string) {
-  if (g.speak === 'server') {
-    await api.post('/api/chinese/speak', undefined, {
-      params: {
-        q: s,
-      },
-    })
-
+  if (navigator.onLine) {
+    const audio = new Audio(`/api/chinese/speak?q=${encodeURIComponent(s)}`)
+    audio.play()
     return
   }
 

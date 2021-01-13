@@ -560,6 +560,7 @@ export default class QuizCard extends Vue {
               params: {
                 q: entry,
                 select: 'chinese,english',
+                generate: 10,
               },
             })
             .then(({ result }) => {
@@ -626,6 +627,7 @@ export default class QuizCard extends Vue {
               params: {
                 q: entry,
                 select: 'chinese,english',
+                generate: 10,
               },
             })
             .then(({ result }) => {

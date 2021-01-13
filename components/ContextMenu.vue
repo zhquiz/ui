@@ -91,6 +91,7 @@ export default class ContextMenu extends Vue {
   @Prop() id?: string
   @Prop() entry?: string | string[]
   @Prop() type?: string
+  @Prop() source?: string
 
   @Prop({ default: () => [] }) additional!: {
     name: string
@@ -123,15 +124,18 @@ export default class ContextMenu extends Vue {
 
   async setQuiz() {
     if (this.entry && this.type) {
-      const { result } = await this.$axios.$post<{
+      const { result } = await this.$axios.$get<{
         result: {
           id: string
           entry: string
         }[]
       }>('/api/quiz/many', {
-        entries: this.entries,
-        select: ['id', 'entry'],
-        type: this.type,
+        params: {
+          entries: this.entries,
+          select: ['id', 'entry'],
+          type: this.type,
+          source: this.source,
+        },
       })
 
       const entryMap = new Map<string, string[]>()
@@ -198,6 +202,7 @@ export default class ContextMenu extends Vue {
       }>('/api/quiz', {
         entries: this.entries,
         type: this.type,
+        source: this.source,
       })
 
       this.$buefy.snackbar.open(

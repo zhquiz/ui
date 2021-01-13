@@ -50,6 +50,16 @@ export const actions = actionTree(
             },
           })
         }
+
+        if (!r.level || !r.levelMin) {
+          r.level = 3
+          r.levelMin = 1
+
+          await this.$axios.$patch('/api/user', {
+            level: r.level,
+            levelMin: r.levelMin,
+          })
+        }
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e)
@@ -57,8 +67,8 @@ export const actions = actionTree(
 
       if (r) {
         commit('SET_SETTINGS', {
-          level: r.level || 3,
-          levelMin: r.levelMin || 1,
+          level: r.level,
+          levelMin: r.levelMin,
           sentenceMin: r['settings.sentence.min'] || null,
           sentenceMax: r['settings.sentence.max'] || null,
         })

@@ -157,8 +157,14 @@ export default (): NuxtConfig => {
     build: {
       transpile: [/typed-vuex/],
     },
+    modern: !!process.env.IS_ELECTRON,
+    router: {
+      // mode: process.env.IS_ELECTRON ? 'hash' : 'history',
+    },
     generate: {
-      dir: process.env.OUTDIR || '../go-zhquiz/public',
+      dir: process.env.IS_ELECTRON
+        ? '../../packages/electron/public'
+        : '../go-zhquiz/public',
     },
   }
 }

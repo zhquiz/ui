@@ -76,13 +76,11 @@ export default class SentencePage extends Vue {
     const { result, count } = await this.$axios.$get<{
       result: any[]
       count: number
-    }>(this.q ? '/api/sentence/q' : '/api/sentence/all', {
+    }>('/api/sentence/q', {
       params: {
         q: this.q,
         page: this.page,
         perPage: this.perPage,
-        level: this.$accessor.settings.level,
-        levelMin: this.$accessor.settings.levelMin,
       },
     })
 

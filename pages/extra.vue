@@ -64,15 +64,15 @@
               placeholder="Must not be empty"
             ></b-input>
           </b-field>
-          <!-- <b-field label="Type">
-            <b-select>
+          <b-field label="Type">
+            <b-select v-model="selected.type">
               <option value="vocab">Vocab</option>
               <option value="sentence">Sentence</option>
               <option v-if="selected.chinese.length === 1" value="hanzi">
                 Hanzi
               </option>
             </b-select>
-          </b-field> -->
+          </b-field>
           <b-field label="Description">
             <b-input v-model="selected.description" type="textarea"></b-input>
           </b-field>
@@ -105,7 +105,8 @@
       :id="selected.id"
       ref="context"
       :entry="selected.chinese"
-      type="extra"
+      :type="selected.type"
+      source="extra"
       :additional="additionalContext"
       @deleted="doDelete"
     />
@@ -201,7 +202,7 @@ export default class ExtraPage extends Vue {
         page: this.page,
         perPage: this.perPage,
         sort: [`${this.sort.type === 'desc' ? '-' : ''}${this.sort.key}`],
-        select: ['id', 'chinese', 'pinyin', 'english'],
+        select: ['id', 'chinese', 'pinyin', 'english', 'type'],
       },
     })
 
@@ -211,6 +212,9 @@ export default class ExtraPage extends Vue {
   }
 
   async doCreate() {
+    this.selected.description = this.selected.description || ' '
+    this.selected.tag = this.selected.tag || ' '
+
     const { existing, id } = await this.$axios.$put('/api/extra', this.selected)
 
     if (id) {
@@ -223,6 +227,7 @@ export default class ExtraPage extends Vue {
       await this.$axios.$put('/api/quiz', {
         entries: [entry],
         type,
+        source: 'extra',
       })
 
       this.$buefy.snackbar.open(`Added ${type}: ${entry} to quiz`)
@@ -233,6 +238,9 @@ export default class ExtraPage extends Vue {
   }
 
   async doUpdate() {
+    this.selected.description = this.selected.description || ' '
+    this.selected.tag = this.selected.tag || ' '
+
     await this.$axios.$patch('/api/extra', this.selected, {
       params: {
         id: this.selected.id,

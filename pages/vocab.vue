@@ -128,11 +128,7 @@
             </div>
           </b-collapse>
 
-          <b-collapse
-            class="card"
-            animation="slide"
-            :open="sentences.length > 0"
-          >
+          <b-collapse class="card" animation="slide" :open="!!sentences.length">
             <div
               slot="trigger"
               slot-scope="props"
@@ -306,6 +302,7 @@ export default class VocabPage extends Vue {
         params: {
           q: entry.simplified || entry,
           type: 'vocab',
+          generate: 10,
         },
         transformResponse: [(r) => JSON.parse(r)],
       })

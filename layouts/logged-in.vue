@@ -160,7 +160,7 @@ export default class AppLayout extends Vue {
 
   get userName(): string {
     // return this.$accessor.user || ''
-    return this.$store.state.user
+    return (this.$store.state.user || '').trim()
   }
 
   isSignedIn() {

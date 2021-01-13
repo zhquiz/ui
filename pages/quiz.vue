@@ -74,9 +74,10 @@
         </div>
         <div class="column is-4">
           <div class="field">
-            <label class="label">Due</label>
+            <label class="label">Extras</label>
             <div class="control">
-              <b-switch v-model="isDue">Due only</b-switch>
+              <b-switch v-model="includeExtra">User items</b-switch>
+              <b-switch v-model="includeUndue">Include undue</b-switch>
             </div>
           </div>
         </div>
@@ -186,7 +187,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Ref, Vue } from 'nuxt-property-decorator'
+import { Component, Ref, Vue, Watch } from 'nuxt-property-decorator'
 
 import QuizCard, { IQuizData, IQuizType } from '~/components/QuizCard.vue'
 
@@ -198,7 +199,8 @@ import QuizCard, { IQuizData, IQuizType } from '~/components/QuizCard.vue'
         type: IQuizType[]
         stage: string[]
         direction: string[]
-        isDue: boolean
+        includeUndue: boolean
+        includeExtra: boolean
       }
     }>('/api/user', {
       params: {
@@ -206,7 +208,8 @@ import QuizCard, { IQuizData, IQuizType } from '~/components/QuizCard.vue'
       },
     })
 
-    const { type, stage, direction, isDue } = r['settings.quiz']
+    const { type, stage, direction, includeUndue, includeExtra } =
+      r['settings.quiz'] || {}
 
     if (type) {
       this.type = type
@@ -220,35 +223,16 @@ import QuizCard, { IQuizData, IQuizType } from '~/components/QuizCard.vue'
       this.direction = direction
     }
 
-    if (typeof isDue === 'boolean') {
-      this.isDue = isDue
+    if (typeof includeUndue === 'boolean') {
+      this.includeUndue = includeUndue
+    }
+
+    if (typeof includeExtra === 'boolean') {
+      this.includeExtra = includeExtra
     }
 
     await this.init()
     this.isQuizDashboardReady = true
-  },
-  watch: {
-    type: {
-      deep: true,
-      handler() {
-        this.reload()
-      },
-    },
-    stage: {
-      deep: true,
-      handler() {
-        this.reload()
-      },
-    },
-    direction: {
-      deep: true,
-      handler() {
-        this.reload()
-      },
-    },
-    isDue() {
-      this.reload()
-    },
   },
 })
 export default class QuizPage extends Vue {
@@ -260,10 +244,12 @@ export default class QuizPage extends Vue {
 
   q = ''
 
-  type: IQuizType[] = ['hanzi', 'vocab', 'sentence', 'extra']
+  type: IQuizType[] = ['hanzi', 'vocab', 'sentence']
   stage = ['new', 'leech', 'learning']
   direction = ['se']
-  isDue = true
+
+  includeExtra = true
+  includeUndue = false
 
   dueIn: Date | null = null
 
@@ -306,13 +292,13 @@ export default class QuizPage extends Vue {
   }
 
   async init() {
-    const {
-      'settings.quiz': { type, stage, direction, isDue } = {} as any,
-    } = await this.$axios.$get('/api/user', {
+    const r = await this.$axios.$get('/api/user', {
       params: {
         select: ['settings.quiz'],
       },
     })
+
+    const { type, stage, direction, isDue } = r['settings.quiz'] || {}
 
     if (type) {
       this.$set(this, 'type', type)
@@ -336,6 +322,11 @@ export default class QuizPage extends Vue {
     await this.reload()
   }
 
+  @Watch('type', { deep: true })
+  @Watch('stage', { deep: true })
+  @Watch('direction', { deep: true })
+  @Watch('includeUndue')
+  @Watch('includeExtra')
   async reload() {
     const {
       quiz,
@@ -345,24 +336,23 @@ export default class QuizPage extends Vue {
       upcoming: IQuizData[]
     }>('/api/quiz/init', {
       params: {
-        _: {
-          type: this.type,
-          stage: this.stage,
-          direction: this.direction,
-          isDue: this.isDue,
-          q: this.q,
-        },
+        type: this.type,
+        stage: this.stage,
+        direction: this.direction,
+        includeUndue: this.includeUndue,
+        includeExtra: this.includeExtra,
+        q: this.q,
       },
     })
 
-    this.quizArray = []
+    const quizArray: string[] = []
     // eslint-disable-next-line array-callback-return
     quiz.map((it) => {
-      this.quizArray.push(it.id)
+      quizArray.push(it.id)
       this.quizData[it.id] = it
     })
 
-    this.$set(this, 'quizArray', this.quizArray)
+    this.$set(this, 'quizArray', quizArray)
     this.$set(this, 'quizData', this.quizData)
 
     this.dueIn = dueIn ? new Date(dueIn) : null

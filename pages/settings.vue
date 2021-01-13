@@ -159,7 +159,7 @@ export default class SettingsPage extends Vue {
       sentenceMin: this.sentenceLength[0],
       sentenceMax:
         this.sentenceLength[1] === this.sentenceLengthRange[1]
-          ? 0
+          ? undefined
           : this.sentenceLength[1],
     })
     this.$accessor.SET_SETTINGS({

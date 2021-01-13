@@ -45,21 +45,11 @@
             >
               Next
             </button>
-
-            <b-dropdown hoverable aria-role="list">
-              <button slot="trigger" class="button">
-                <fontawesome icon="caret-down" />
-              </button>
-
-              <b-dropdown-item aria-role="listitem">
-                Search in MDBG
-              </b-dropdown-item>
-            </b-dropdown>
           </div>
         </div>
 
         <div class="column is-6">
-          <b-collapse class="card" animation="slide" :open="sub.length">
+          <b-collapse class="card" animation="slide" :open="!!sub.length">
             <div
               slot="trigger"
               slot-scope="props"
@@ -89,7 +79,7 @@
             </div>
           </b-collapse>
 
-          <b-collapse class="card" animation="slide" :open="sup.length">
+          <b-collapse class="card" animation="slide" :open="!!sup.length">
             <div
               slot="trigger"
               slot-scope="props"
@@ -119,7 +109,7 @@
             </div>
           </b-collapse>
 
-          <b-collapse class="card" animation="slide" :open="variants.length">
+          <b-collapse class="card" animation="slide" :open="!!variants.length">
             <div
               slot="trigger"
               slot-scope="props"
@@ -149,7 +139,7 @@
             </div>
           </b-collapse>
 
-          <b-collapse class="card" animation="slide" :open="vocabs.length > 0">
+          <b-collapse class="card" animation="slide" :open="!!vocabs.length">
             <div
               slot="trigger"
               slot-scope="props"
@@ -196,11 +186,7 @@
             </div>
           </b-collapse>
 
-          <b-collapse
-            class="card"
-            animation="slide"
-            :open="sentences.length > 0"
-          >
+          <b-collapse class="card" animation="slide" :open="!!sentences.length">
             <div
               slot="trigger"
               slot-scope="props"
@@ -235,7 +221,12 @@
       </div>
     </div>
 
-    <ContextMenu ref="context" :entry="selected.entry" :type="selected.type" />
+    <ContextMenu
+      ref="context"
+      :entry="selected.entry"
+      :type="selected.type"
+      :additional="additionalContext"
+    />
   </section>
 </template>
 
@@ -290,20 +281,35 @@ export default class HanziPage extends Vue {
   async created() {
     this.q0 = this.q
 
-    if (!this.q0) {
-      const { result } = await this.$axios.$get<{
-        result: string
-      }>('/api/hanzi/random', {
-        params: {
-          levelMin: this.$accessor.levelMin,
-          level: this.$accessor.level,
-        },
-      })
-
-      this.q0 = result
+    if (this.additionalContext[0]) {
+      await this.additionalContext[0].handler()
     }
 
     await this.onQChange(this.q0)
+  }
+
+  get additionalContext() {
+    if (!this.q) {
+      return [
+        {
+          name: 'Reload',
+          handler: async () => {
+            const { result } = await this.$axios.$get<{
+              result: string
+            }>('/api/hanzi/random', {
+              params: {
+                levelMin: this.$accessor.levelMin,
+                level: this.$accessor.level,
+              },
+            })
+
+            this.q0 = result
+          },
+        },
+      ]
+    }
+
+    return []
   }
 
   onQChange(q: string) {
@@ -358,6 +364,7 @@ export default class HanziPage extends Vue {
       params: {
         q: this.current,
         type: 'hanzi',
+        generate: 10,
       },
     })
 

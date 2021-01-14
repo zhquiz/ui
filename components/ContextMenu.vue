@@ -35,37 +35,43 @@
       <a></a>
     </li>
     <li v-if="entries.length === 1">
-      <nuxt-link
-        :to="{ path: '/hanzi', query: { q: entries[0] } }"
-        target="_blank"
+      <a
+        role="button"
+        @click="
+          openInNewTab('/hanzi', { q: entries[0] }, `${entries[0]} - Hanzi`)
+        "
       >
         Search as Hanzi
-      </nuxt-link>
+      </a>
     </li>
     <li v-if="entries.length === 1 && type != 'hanzi'">
-      <nuxt-link
-        :to="{ path: '/vocab', query: { q: entries[0] } }"
-        target="_blank"
+      <a
+        role="button"
+        @click="
+          openInNewTab('/vocab', { q: entries[0] }, `${entries[0]} - Vocab`)
+        "
       >
-        Search as vocab
-      </nuxt-link>
+        Search as Vocab
+      </a>
     </li>
     <li v-if="entries.length === 1 && type !== 'sentence'">
       <a
-        :href="`https://en.wiktionary.org/wiki/${entries[0]}`"
-        target="_blank"
-        rel="noopener noreferrer"
+        role="button"
+        @click="openInNewTab(`https://en.wiktionary.org/wiki/${entries[0]}`)"
       >
         Open in wiktionary
       </a>
     </li>
     <li v-if="entries.length === 1">
       <a
-        :href="`https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=${
-          type === 'hanzi' ? `*${entries[0]}*` : entries[0]
-        }`"
-        target="_blank"
-        rel="noopener noreferrer"
+        role="button"
+        @click="
+          openInNewTab(
+            `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=${
+              type === 'hanzi' ? `*${entries[0]}*` : entries[0]
+            }`
+          )
+        "
       >
         Open in MDBG
       </a>
@@ -84,6 +90,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Ref } from 'nuxt-property-decorator'
+import { openInNewTab } from '~/assets/electron'
 import { speak } from '~/assets/speak'
 
 @Component
@@ -120,6 +127,18 @@ export default class ContextMenu extends Vue {
       : this.entry
       ? [this.entry]
       : []
+  }
+
+  openInNewTab(url: string, query?: Record<string, any>, title?: string) {
+    if (query) {
+      url += '?'
+      // eslint-disable-next-line array-callback-return
+      Object.entries(query).map(([k, v]) => {
+        url += `${k}=${encodeURIComponent(v)}`
+      })
+    }
+
+    openInNewTab(url, title)
   }
 
   async setQuiz() {

@@ -9,9 +9,7 @@
           :key="nav.name"
           :to="nav.to"
           :class="{ active: $route.path === nav.to }"
-          :href="nav.href"
-          :rel="nav.href ? 'noopener noreferrer' : undefined"
-          :target="nav.href ? '_blank' : undefined"
+          @click="nav.href ? openInNewTab(nav.href) : undefined"
         >
           <fontawesome v-if="nav.icon" :icon="nav.icon" />
           <span
@@ -54,9 +52,7 @@
           :tag="nav.to ? 'router-link' : 'a'"
           :to="nav.to"
           :active="$route.path === nav.to"
-          :href="nav.href"
-          :rel="nav.href ? 'noopener noreferrer' : undefined"
-          :target="nav.href ? '_blank' : undefined"
+          @click="nav.href ? openInNewTab(nav.href) : undefined"
         >
           <span class="prefix">
             <fontawesome v-if="nav.icon" :icon="nav.icon" />
@@ -94,6 +90,7 @@
 
 <script lang="ts">
 import { Component, Vue } from 'nuxt-property-decorator'
+import { openInNewTab } from '~/assets/electron'
 import { cotter, logOut } from '~/service/auth'
 
 @Component
@@ -165,6 +162,10 @@ export default class AppLayout extends Vue {
 
   isSignedIn() {
     return !!cotter
+  }
+
+  openInNewTab(url: string) {
+    openInNewTab(url)
   }
 
   async doLogout() {

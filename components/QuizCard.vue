@@ -314,6 +314,7 @@ export interface IQuizData {
   wrongStreak?: number
   stat?: any
   entry?: string
+  source?: string
   tag?: string[]
 }
 
@@ -399,7 +400,8 @@ export default class QuizCard extends Vue {
         return {}
       }
 
-      const { entry, type } = it
+      const entry = it.entry
+      const type = (it.source as 'extra') || it.type
       if (!entry || !type) {
         return {}
       }
@@ -407,6 +409,8 @@ export default class QuizCard extends Vue {
       return {
         ...it,
         ...this.dictionaryData[type][entry],
+        entry,
+        type,
       }
     })()
 
@@ -475,7 +479,15 @@ export default class QuizCard extends Vue {
       }>('/api/quiz/many', {
         params: {
           ids: [quizId],
-          select: ['entry', 'type', 'direction', 'front', 'back', 'mnemonic'],
+          select: [
+            'entry',
+            'type',
+            'source',
+            'direction',
+            'front',
+            'back',
+            'mnemonic',
+          ],
         },
       })
 
@@ -489,16 +501,18 @@ export default class QuizCard extends Vue {
         q.id = quizId
         q.type = q.type as IQuizType
         q.entry = q.entry as string
+        q.source = q.source as string
 
         this.$set(this.quizData, quizId, q)
       }
     }
 
-    if (!q.entry || !q.type) {
+    const type = (q.source as 'extra') || q.type
+    const entry = q.entry
+
+    if (!entry || !type) {
       return
     }
-
-    const { entry, type } = q
 
     if (!this.dictionaryData[type][entry]) {
       const setTemplate: {
@@ -510,7 +524,7 @@ export default class QuizCard extends Vue {
             english: string
           }>('/api/hanzi', {
             params: {
-              entry: q.entry,
+              entry,
               select: 'pinyin,english',
             },
           })
@@ -570,7 +584,7 @@ export default class QuizCard extends Vue {
                   pinyin: makePinyin(r.chinese, {
                     keepRest: true,
                   }),
-                  english: r.english,
+                  english: r.english.split('\x1f')[0],
                 }
               })
             })
@@ -599,7 +613,7 @@ export default class QuizCard extends Vue {
                 pinyin: makePinyin(r.chinese, {
                   keepRest: true,
                 }),
-                english: r.english,
+                english: r.english.split('\x1f')[0],
               }
             })
 
@@ -637,7 +651,7 @@ export default class QuizCard extends Vue {
                   pinyin: makePinyin(r.chinese, {
                     keepRest: true,
                   }),
-                  english: r.english,
+                  english: r.english.split('\x1f')[0],
                 }
               })
             })
@@ -650,7 +664,7 @@ export default class QuizCard extends Vue {
         },
       }
 
-      await setTemplate[q.type]()
+      await setTemplate[type]()
     }
 
     this.isQuizItemReady = true

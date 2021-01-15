@@ -140,7 +140,7 @@
         <div class="card-content">
           <div class="columns">
             <div class="column is-3">
-              <div v-if="!isDue">
+              <div v-if="includeUndue">
                 <span class="column-label">Pending: </span>
                 <span>{{ quizArray.length | format }}</span>
               </div>
@@ -298,7 +298,8 @@ export default class QuizPage extends Vue {
       },
     })
 
-    const { type, stage, direction, isDue } = r['settings.quiz'] || {}
+    const { type, stage, direction, includeExtra, includeUndue } =
+      r['settings.quiz'] || {}
 
     if (type) {
       this.$set(this, 'type', type)
@@ -312,8 +313,12 @@ export default class QuizPage extends Vue {
       this.$set(this, 'direction', direction)
     }
 
-    if (typeof isDue !== 'undefined') {
-      this.$set(this, 'isDue', isDue)
+    if (typeof includeExtra !== 'undefined') {
+      this.$set(this, 'includeExtra', includeExtra)
+    }
+
+    if (typeof includeUndue !== 'undefined') {
+      this.$set(this, 'includeUndue', includeUndue)
     }
 
     this.isInit = true

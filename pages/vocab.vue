@@ -298,16 +298,28 @@ export default class VocabPage extends Vue {
     }
 
     ;(async () => {
-      const r = await this.$axios.$get('/api/sentence/q', {
+      const r = await this.$axios.$get<{
+        result: {
+          chinese: string
+          english: string
+        }[]
+      }>('/api/sentence/q', {
         params: {
           q: entry.simplified || entry,
           type: 'vocab',
           generate: 10,
+          select: 'chinese,english',
         },
-        transformResponse: [(r) => JSON.parse(r)],
       })
 
-      this.$set(this, 'sentences', r.result)
+      this.$set(
+        this,
+        'sentences',
+        r.result.map((r) => ({
+          chinese: r.chinese,
+          english: r.english.split('\x1f')[0],
+        }))
+      )
     })()
   }
 }

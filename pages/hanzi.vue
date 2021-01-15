@@ -360,15 +360,28 @@ export default class HanziPage extends Vue {
   }
 
   async loadSentences() {
-    const { result } = await this.$axios.$get('/api/sentence/q', {
+    const { result } = await this.$axios.$get<{
+      result: {
+        chinese: string
+        english: string
+      }[]
+    }>('/api/sentence/q', {
       params: {
         q: this.current,
         type: 'hanzi',
         generate: 10,
+        select: 'chinese,english',
       },
     })
 
-    this.$set(this, 'sentences', result)
+    this.$set(
+      this,
+      'sentences',
+      result.map((r) => ({
+        chinese: r.chinese,
+        english: r.english.split('\x1f')[0],
+      }))
+    )
   }
 }
 </script>

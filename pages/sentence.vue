@@ -74,17 +74,24 @@ export default class SentencePage extends Vue {
   @Watch('q')
   async reload() {
     const { result, count } = await this.$axios.$get<{
-      result: any[]
+      result: {
+        chinese: string
+        english: string
+      }[]
       count: number
     }>('/api/sentence/q', {
       params: {
         q: this.q,
         page: this.page,
         perPage: this.perPage,
+        select: 'chinese,english',
       },
     })
 
-    this.tablePagedData = result
+    this.tablePagedData = result.map((r) => ({
+      chinese: r.chinese,
+      english: r.english.split('\x1f')[0],
+    }))
     this.count = count
   }
 

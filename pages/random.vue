@@ -142,7 +142,7 @@ export default class RandomPage extends Vue {
             }
           )
           this.sentence.entry = result
-          this.sentence.english = english
+          this.sentence.english = english.split('\x1f')[0]
         },
       },
     ],

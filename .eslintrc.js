@@ -19,5 +19,6 @@ module.exports = {
     'import/order': 0,
     'no-lonely-if': 0,
     'no-use-before-define': 0,
+    'unicorn/escape-case': 0,
   },
 }

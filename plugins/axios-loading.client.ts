@@ -31,7 +31,7 @@ const onInit: Plugin = async ({ $axios, app }) => {
             },
           })
         }
-      }, 1000)
+      }, 5000)
     }
 
     if (cotter) {

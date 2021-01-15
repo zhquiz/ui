@@ -27,13 +27,6 @@
               >
                 Sentence
               </b-checkbox-button>
-              <b-checkbox-button
-                v-model="type"
-                native-value="extra"
-                type="is-success"
-              >
-                Extra
-              </b-checkbox-button>
             </b-field>
           </div>
         </div>

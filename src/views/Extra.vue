@@ -106,6 +106,7 @@
       ref="context"
       :entry="selected.chinese"
       :type="selected.type"
+      :description="selected.description"
       source="extra"
       :additional="additionalContext"
       @deleted="doDelete"
@@ -215,7 +216,15 @@ export default class ExtraPage extends Vue {
         page: this.page,
         perPage: this.perPage,
         sort: [`${this.sort.type === 'desc' ? '-' : ''}${this.sort.key}`],
-        select: ['id', 'chinese', 'pinyin', 'english', 'type']
+        select: [
+          'id',
+          'chinese',
+          'pinyin',
+          'english',
+          'type',
+          'description',
+          'tag'
+        ]
       }
     })
 

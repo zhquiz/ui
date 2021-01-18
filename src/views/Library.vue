@@ -35,6 +35,7 @@
                 :key="i"
                 :title="it.title"
                 :entries="it.entries"
+                :description="it.description"
                 :additional="additionalContext(it)"
               />
 
@@ -60,6 +61,7 @@
                 :key="i"
                 :title="it.title"
                 :entries="it.entries"
+                :description="it.description"
               />
 
               <b-pagination

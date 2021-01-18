@@ -250,9 +250,7 @@ export default class LevelPage extends Vue {
     this.setCurrentData()
 
     await api.patch('/api/user', {
-      set: {
-        'settings.level.whatToShow': this.whatToShow
-      }
+      'settings.level.whatToShow': this.whatToShow
     })
   }
 }
@@ -261,5 +259,9 @@ export default class LevelPage extends Vue {
 <style scoped>
 .tag {
   margin-right: 0.5rem;
+}
+
+.b-table {
+  margin-bottom: 2rem;
 }
 </style>

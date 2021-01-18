@@ -117,6 +117,7 @@
 import { Component, Ref, Vue, Watch } from 'vue-property-decorator'
 import ContextMenu from '@/components/ContextMenu.vue'
 import { api } from '@/assets/api'
+import toPinyin from 'chinese-to-pinyin'
 
 interface IExtra {
   id?: string;
@@ -192,6 +193,13 @@ export default class ExtraPage extends Vue {
   }
 
   openEditModal () {
+    if (!this.selected.pinyin) {
+      this.selected.pinyin = toPinyin(this.selected.chinese, {
+        keepRest: true,
+        toneToNumber: true
+      })
+    }
+
     this.isEditModal = true
   }
 

@@ -205,6 +205,8 @@ import { api } from '@/assets/api'
       })
       .then((r) => r.data)
 
+    console.log(r)
+
     const { type, stage, direction, includeUndue, includeExtra } =
       r['settings.quiz'] || {}
 

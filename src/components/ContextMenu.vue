@@ -101,6 +101,7 @@ export default class ContextMenu extends Vue {
   @Prop() entry?: string | string[]
   @Prop() type?: string
   @Prop() source?: string
+  @Prop() description?: string
 
   @Prop({ default: () => [] }) additional!: {
     name: string;
@@ -215,7 +216,8 @@ export default class ContextMenu extends Vue {
       }>('/api/quiz', {
         entries: this.entries,
         type: this.type,
-        source: this.source
+        source: this.source,
+        description: this.description
       })
 
       this.$buefy.snackbar.open(
@@ -244,10 +246,8 @@ export default class ContextMenu extends Vue {
     )
 
     if (this.entries.length && this.type && ids.length) {
-      await api.delete('/api/quiz', {
-        params: {
-          ids
-        }
+      await api.post('/api/quiz/delete', {
+        ids
       })
 
       this.$buefy.snackbar.open(

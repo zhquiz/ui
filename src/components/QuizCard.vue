@@ -37,7 +37,7 @@
 
               <div class="font-zh-trad text-w-normal" style="font-size: 1.7rem">
                 <span
-                  v-for="(it, i) in current.traditional"
+                  v-for="(it, i) in current.traditional || []"
                   :key="i"
                   class="traditional"
                 >
@@ -56,8 +56,8 @@
                     doMask(
                       it,
                       current.entry,
-                      ...current.pinyin,
-                      ...current.traditional
+                      ...(current.pinyin || []),
+                      ...(current.traditional || [])
                     )
                   "
                 ></li>
@@ -106,8 +106,8 @@
               {{ current.english }}
             </p>
 
-            <ul v-if="current.sentences.length">
-              <li v-for="(it, i) in current.sentences" :key="i">
+            <ul v-if="getSentences().length">
+              <li v-for="(it, i) in getSentences()" :key="i">
                 <span
                   class="has-context"
                   :title="it.pinyin"
@@ -153,7 +153,7 @@
             </div>
 
             <div
-              v-if="current.traditional.length"
+              v-if="current.traditional && current.traditional.length"
               class="font-zh-trad text-w-normal"
               style="font-size: 1.7rem"
             >
@@ -168,7 +168,7 @@
             </div>
 
             <div>
-              {{ current.pinyin.join(' | ') }}
+              {{ (current.pinyin || []).join(' | ') }}
             </div>
 
             <ul>
@@ -177,8 +177,8 @@
               </li>
             </ul>
 
-            <ul v-if="current.sentences.length">
-              <li v-for="(it, i) in current.sentences" :key="i">
+            <ul v-if="getSentences().length">
+              <li v-for="(it, i) in getSentences()" :key="i">
                 <span
                   class="has-context"
                   :title="it.pinyin"
@@ -353,7 +353,18 @@ export default class QuizCard extends Vue {
     extra: {} as Record<string, Record<string, unknown>>
   }
 
-  current: Record<string, string> = {}
+  current: Record<string, unknown> = {}
+
+  getSentences (
+    entry = this.current.entry as string
+  ): Record<string, unknown>[] {
+    return Object.entries(this.dictionaryData.sentence)
+      .filter(([k]) => k.includes(entry))
+      .map(([chinese, v]) => ({
+        chinese,
+        ...v
+      }))
+  }
 
   async startQuiz () {
     this.quizIndex = -1
@@ -443,9 +454,9 @@ export default class QuizCard extends Vue {
   }
 
   async openContext (ev: MouseEvent, entry?: string, type?: string) {
-    this.ctxEntry = entry || this.current.entry || ''
-    this.ctxType = type || this.current.type || ''
-    this.ctxSource = entry ? '' : this.current.source
+    this.ctxEntry = entry || (this.current.entry as string) || ''
+    this.ctxType = type || (this.current.type as string) || ''
+    this.ctxSource = entry ? '' : (this.current.source as string)
 
     await this.context.open(ev)
   }
@@ -542,7 +553,7 @@ export default class QuizCard extends Vue {
             }
           })
 
-          this.dictionaryData[type][entry] = {
+          this.dictionaryData.hanzi[entry] = {
             pinyin,
             english
           }
@@ -576,37 +587,49 @@ export default class QuizCard extends Vue {
                 }
               }))
 
-          const sentences = await api
-            .get<{
-              result: {
-                id: string;
-                chinese: string;
-                english: string;
-              }[];
-            }>('/api/sentence/q', {
-              params: {
-                q: entry,
-                select: 'chinese,english',
-                generate: 10
-              }
-            })
-            .then(({ data: { result } }) => {
-              return result.map((r) => {
-                return {
-                  chinese: r.chinese,
-                  pinyin: toPinyin(r.chinese, {
-                    keepRest: true
-                  }),
-                  english: r.english.split('\x1f')[0]
-                }
-              })
-            })
-
-          this.dictionaryData[type][entry] = {
+          this.dictionaryData.vocab[entry] = {
             traditional,
             pinyin,
-            english,
-            sentences
+            english
+          }
+
+          if (this.getSentences(entry).length < 10) {
+            api
+              .get<{
+                result: {
+                  id: string;
+                  chinese: string;
+                  english: string;
+                }[];
+              }>('/api/sentence/q', {
+                params: {
+                  q: entry,
+                  select: 'chinese,english',
+                  generate: 10
+                }
+              })
+              .then(({ data: { result } }) => {
+                return result.map((r) => {
+                  return {
+                    chinese: r.chinese,
+                    pinyin: toPinyin(r.chinese, {
+                      keepRest: true
+                    }),
+                    english: r.english.split('\x1f')[0]
+                  }
+                })
+              })
+              .then((sentences) => {
+                sentences.map((s) => {
+                  this.dictionaryData.sentence[s.chinese] = s
+                })
+
+                this.$set(
+                  this.dictionaryData,
+                  'sentence',
+                  this.dictionaryData.sentence
+                )
+              })
           }
         },
         sentence: async () => {
@@ -645,41 +668,54 @@ export default class QuizCard extends Vue {
             }
           })
 
-          const sentences = await api
-            .get<{
-              result: {
-                id: string;
-                chinese: string;
-                english: string;
-              }[];
-            }>('/api/sentence/q', {
-              params: {
-                q: entry,
-                select: 'chinese,english',
-                generate: 10
-              }
-            })
-            .then(({ data: { result } }) => {
-              return result.map((r) => {
-                return {
-                  chinese: r.chinese,
-                  pinyin: toPinyin(r.chinese, {
-                    keepRest: true
-                  }),
-                  english: r.english.split('\x1f')[0]
-                }
-              })
-            })
-
           this.dictionaryData.extra[entry] = {
             pinyin,
-            english,
-            sentences
+            english
+          }
+
+          if (this.getSentences(entry).length < 10) {
+            api
+              .get<{
+                result: {
+                  id: string;
+                  chinese: string;
+                  english: string;
+                }[];
+              }>('/api/sentence/q', {
+                params: {
+                  q: entry,
+                  select: 'chinese,english',
+                  generate: 10
+                }
+              })
+              .then(({ data: { result } }) => {
+                return result.map((r) => {
+                  return {
+                    chinese: r.chinese,
+                    pinyin: toPinyin(r.chinese, {
+                      keepRest: true
+                    }),
+                    english: r.english.split('\x1f')[0]
+                  }
+                })
+              })
+              .then((sentences) => {
+                sentences.map((s) => {
+                  this.dictionaryData.sentence[s.chinese] = s
+                })
+
+                this.$set(
+                  this.dictionaryData,
+                  'sentence',
+                  this.dictionaryData.sentence
+                )
+              })
           }
         }
       }
 
       await setTemplate[type]()
+      this.$set(this, 'dictionaryData', this.dictionaryData)
     }
 
     this.isQuizItemReady = true

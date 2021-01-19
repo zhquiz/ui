@@ -3,6 +3,7 @@ import './plugins/fontawesome'
 import './plugins/vue-context.js'
 import './assets/app.css'
 import './assets/buefy-mod.css'
+import './main.scss'
 
 import Vue from 'vue'
 

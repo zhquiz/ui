@@ -35,22 +35,30 @@
       <a></a>
     </li>
     <li v-if="entries.length === 1">
-      <router-link
+      <a
         role="button"
-        :to="`/hanzi?q=${encodeURIComponent(entries[0])}`"
-        target="_blank"
+        @click="
+          openInNewTab(
+            `/hanzi?q=${encodeURIComponent(entries[0])}`,
+            entries[0] + ' - Hanzi'
+          )
+        "
       >
         Search as Hanzi
-      </router-link>
+      </a>
     </li>
     <li v-if="entries.length === 1 && type != 'hanzi'">
-      <router-link
+      <a
         role="button"
-        :to="`/vocab?q=${encodeURIComponent(entries[0])}`"
-        target="_blank"
+        @click="
+          openInNewTab(
+            `/vocab?q=${encodeURIComponent(entries[0])}`,
+            entries[0] + ' - Vocab'
+          )
+        "
       >
         Search as Vocab
-      </router-link>
+      </a>
     </li>
     <li v-if="entries.length === 1 && type !== 'sentence'">
       <a
@@ -111,6 +119,14 @@ export default class ContextMenu extends Vue {
   @Ref() contextmenu!: {
     open: (evt: MouseEvent) => void;
   }
+
+  openInNewTab = window.parent
+    ? (url: string, title: string) => {
+      window.parent.open(url, title)
+    }
+    : (url: string) => {
+      open(url, '_blank', 'noopener noreferrer')
+    }
 
   quiz: {
     of?: {

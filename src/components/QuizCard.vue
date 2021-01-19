@@ -48,7 +48,7 @@
             <div v-else-if="current.direction === 'ec'">
               <h4>Vocab English-Chinese</h4>
 
-              <ul>
+              <ul v-if="Array.isArray(current.english)">
                 <li
                   v-for="(it, i) in current.english"
                   :key="i"
@@ -62,6 +62,18 @@
                   "
                 ></li>
               </ul>
+
+              <div
+                v-else
+                v-html="
+                  doMask(
+                    current.english,
+                    current.entry,
+                    ...(current.pinyin || []),
+                    ...(current.traditional || [])
+                  )
+                "
+              ></div>
             </div>
             <div v-else>
               <h4>Vocab Simplified-English</h4>

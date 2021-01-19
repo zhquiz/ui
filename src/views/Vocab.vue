@@ -156,7 +156,7 @@
 <script lang="ts">
 import XRegExp from 'xregexp'
 import { Component, Ref, Vue } from 'vue-property-decorator'
-import makePinyin from 'chinese-to-pinyin'
+import toPinyin from 'chinese-to-pinyin'
 import ContextMenu from '@/components/ContextMenu.vue'
 import { api } from '@/assets/api'
 
@@ -290,7 +290,7 @@ export default class VocabPage extends Vue {
             ...this.entries.slice(0, this.i),
             {
               simplified: entry,
-              pinyin: makePinyin(entry, { keepRest: true })
+              pinyin: toPinyin(entry, { keepRest: true, toneToNumber: true })
             },
             ...this.entries.slice(this.i + 1)
           ]

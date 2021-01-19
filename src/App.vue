@@ -8,9 +8,7 @@
           :key="nav.name"
           :to="nav.to"
           :class="{ active: $route.path === nav.to }"
-          :href="nav.href"
-          :target="nav.href ? '_blank' : undefined"
-          :rel="nav.href ? 'noreferrer noopener' : undefined"
+          @click="nav.href ? openInNewTab(nav.href) : undefined"
         >
           <fontawesome v-if="nav.icon" :icon="nav.icon" />
           <span
@@ -39,9 +37,7 @@
           :tag="nav.to ? 'router-link' : 'a'"
           :to="nav.to"
           :active="$route.path === nav.to"
-          :href="nav.href"
-          :target="nav.href ? '_blank' : undefined"
-          :rel="nav.href ? 'noreferrer noopener' : undefined"
+          @click="nav.href ? openInNewTab(nav.href) : undefined"
         >
           <span class="prefix">
             <fontawesome v-if="nav.icon" :icon="nav.icon" />
@@ -125,6 +121,14 @@ export default class AppLayout extends Vue {
       }
     ]
   }
+
+  openInNewTab = window.parent
+    ? (url: string, title?: string) => {
+      window.parent.open(url, title)
+    }
+    : (url: string) => {
+      open(url, '_blank', 'noopener noreferrer')
+    }
 
   get level () {
     const { level } = this.$store.state.settings
@@ -253,7 +257,7 @@ export default class AppLayout extends Vue {
   }
 }
 
-@media screen and (max-width: 1024px) {
+@media screen and (max-width: 800px) {
   .AppLayout {
     flex-direction: column;
   }
@@ -268,7 +272,7 @@ export default class AppLayout extends Vue {
   }
 }
 
-@media (min-width: 1025px) {
+@media (min-width: 801px) {
   .AppLayout {
     flex-direction: row;
   }

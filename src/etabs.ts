@@ -1,13 +1,24 @@
-import 'bulma/css/bulma.css'
+import 'buefy/dist/buefy.css'
 
 import './etabs.scss'
+
+declare global {
+  interface Window {
+    openExternal?: (url: string) => void;
+  }
+}
 
 const tabEl = document.querySelector('nav > ul') as HTMLUListElement
 const mainEl = document.querySelector('main') as HTMLElement
 const originalOpen = window.open
 
 window.open = function (url = '', title = '') {
-  if (!url.startsWith('/')) {
+  if (!url.startsWith('/#/')) {
+    if (window.openExternal) {
+      window.openExternal(url)
+      return null
+    }
+
     return originalOpen(url, '_blank', 'noopener noreferrer')
   }
 
@@ -56,7 +67,7 @@ window.open = function (url = '', title = '') {
             tabEl.querySelector('li')!.classList.add('is-active')
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             mainEl.querySelector('iframe')!.style.display = ''
-          })
+          }, 10)
         }
 
         li.remove()
@@ -78,7 +89,7 @@ window.open = function (url = '', title = '') {
   tabEl.append(li)
 
   const iframe = document.createElement('iframe')
-  iframe.src = '/#' + url
+  iframe.src = url
 
   mainEl.querySelectorAll('iframe').forEach((el) => {
     el.style.display = 'none'
@@ -89,4 +100,4 @@ window.open = function (url = '', title = '') {
   return iframe.contentWindow
 }
 
-open('/', 'Home')
+open('/#/', 'Home')

@@ -2,7 +2,7 @@
   <section>
     <div v-if="isInit" class="QuizPage">
       <div class="columns" style="flex-wrap: wrap">
-        <div class="column is-4-fullhd is-6">
+        <div class="column is-4-fullhd is-5">
           <div class="field">
             <label class="label">Type</label>
             <b-field class="flex-wrap">
@@ -30,7 +30,7 @@
             </b-field>
           </div>
         </div>
-        <div class="column is-4-fullhd is-6">
+        <div class="column is-4-fullhd is-7">
           <div class="field">
             <label class="label">Learning stage</label>
             <b-field class="flex-wrap">
@@ -65,7 +65,7 @@
             </b-field>
           </div>
         </div>
-        <div class="column is-4-fullhd is-6">
+        <div class="column is-4-fullhd is-5" style="min-width: 350px">
           <div class="field">
             <label class="label">Extras</label>
             <div class="control">
@@ -74,7 +74,7 @@
             </div>
           </div>
         </div>
-        <div class="column is-6">
+        <div class="column" style="min-width: 600px">
           <div class="field">
             <label class="label">Direction</label>
             <b-field class="flex-wrap">
@@ -102,7 +102,7 @@
             </b-field>
           </div>
         </div>
-        <div class="column">
+        <div class="column" style="min-width: 600px">
           <form @submit.prevent="reload">
             <b-field label="Filter">
               <b-input

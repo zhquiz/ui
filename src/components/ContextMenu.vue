@@ -39,7 +39,7 @@
         role="button"
         @click="
           openInNewTab(
-            `/hanzi?q=${encodeURIComponent(entries[0])}`,
+            `/#/hanzi?q=${encodeURIComponent(entries[0])}`,
             entries[0] + ' - Hanzi'
           )
         "
@@ -52,7 +52,7 @@
         role="button"
         @click="
           openInNewTab(
-            `/vocab?q=${encodeURIComponent(entries[0])}`,
+            `/#/vocab?q=${encodeURIComponent(entries[0])}`,
             entries[0] + ' - Vocab'
           )
         "
@@ -63,11 +63,11 @@
     <li v-if="entries.length === 1 && type !== 'sentence'">
       <a
         role="button"
-        :href="
-          `https://en.wiktionary.org/wiki/${encodeURIComponent(entries[0])}`
+        @click="
+          openInNewTab(
+            `https://en.wiktionary.org/wiki/${encodeURIComponent(entries[0])}`
+          )
         "
-        target="_blank"
-        rel="noopener noreferrer"
       >
         Open in wiktionary
       </a>
@@ -75,13 +75,13 @@
     <li v-if="entries.length === 1">
       <a
         role="button"
-        :href="
-          `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=${encodeURIComponent(
-            type === 'hanzi' ? `*${entries[0]}*` : entries[0]
-          )}`
+        @click="
+          openInNewTab(
+            `https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb=${encodeURIComponent(
+              type === 'hanzi' ? `*${entries[0]}*` : entries[0]
+            )}`
+          )
         "
-        target="_blank"
-        rel="noopener noreferrer"
       >
         Open in MDBG
       </a>
@@ -121,7 +121,7 @@ export default class ContextMenu extends Vue {
   }
 
   openInNewTab = window.parent
-    ? (url: string, title: string) => {
+    ? (url: string, title?: string) => {
       window.parent.open(url, title)
     }
     : (url: string) => {

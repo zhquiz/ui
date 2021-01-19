@@ -18,12 +18,7 @@
         <div class="column is-6 entry-display">
           <div
             class="hanzi-display clickable font-han"
-            @contextmenu.prevent="
-              (evt) => {
-                selected = { entry: current, type: 'hanzi' }
-                $refs.context.open(evt)
-              }
-            "
+            @contextmenu.prevent="(evt) => openContext(evt, current, 'hanzi')"
           >
             {{ current }}
           </div>
@@ -67,12 +62,7 @@
                 v-for="h in sub"
                 :key="h"
                 class="font-han clickable"
-                @contextmenu.prevent="
-                  (evt) => {
-                    selected = { entry: h, type: 'hanzi' }
-                    $refs.context.open(evt)
-                  }
-                "
+                @contextmenu.prevent="(evt) => openContext(evt, h, 'hanzi')"
               >
                 {{ h }}
               </span>
@@ -97,12 +87,7 @@
                 v-for="h in sup"
                 :key="h"
                 class="font-han clickable"
-                @contextmenu.prevent="
-                  (evt) => {
-                    selected = { entry: h, type: 'hanzi' }
-                    $refs.context.open(evt)
-                  }
-                "
+                @contextmenu.prevent="(evt) => openContext(evt, h, 'hanzi')"
               >
                 {{ h }}
               </span>
@@ -127,12 +112,7 @@
                 v-for="h in variants"
                 :key="h"
                 class="font-han clickable"
-                @contextmenu.prevent="
-                  (evt) => {
-                    selected = { entry: h, type: 'hanzi' }
-                    $refs.context.open(evt)
-                  }
-                "
+                @contextmenu.prevent="(evt) => openContext(evt, h, 'hanzi')"
               >
                 {{ h }}
               </span>
@@ -157,10 +137,7 @@
                 <span
                   class="clickable"
                   @contextmenu.prevent="
-                    (evt) => {
-                      selected = { entry: v.simplified, type: 'vocab' }
-                      $refs.context.open(evt)
-                    }
+                    (evt) => openContext(evt, v.simplified, 'vocab')
                   "
                 >
                   {{ v.simplified }}
@@ -170,10 +147,7 @@
                   v-if="v.traditional"
                   class="clickable"
                   @contextmenu.prevent="
-                    (evt) => {
-                      selected = { entry: v.traditional, type: 'vocab' }
-                      $refs.context.open(evt)
-                    }
+                    (evt) => openContext(evt, v.traditional, 'vocab')
                   "
                 >
                   {{ v.traditional }}
@@ -204,10 +178,7 @@
                 <span
                   class="clickable"
                   @contextmenu.prevent="
-                    (evt) => {
-                      selected = { entry: s.chinese, type: 'sentence' }
-                      $refs.context.open(evt)
-                    }
+                    (evt) => openContext(evt, s.chinese, 'sentence')
                   "
                 >
                   {{ s.chinese }}
@@ -315,6 +286,15 @@ export default class HanziPage extends Vue {
     }
 
     return []
+  }
+
+  openContext (
+    evt: MouseEvent,
+    entry = this.selected.entry,
+    type = this.selected.type
+  ) {
+    this.selected = { entry, type }
+    this.context.open(evt)
   }
 
   onQChange (q: string) {

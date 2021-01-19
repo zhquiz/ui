@@ -160,6 +160,7 @@ export default class RandomPage extends Vue {
 
   openContext (evt: MouseEvent, type: 'hanzi' | 'vocab' | 'sentence') {
     this.selected = this[type]
+    this.selected.type = type
     this.context.open(evt)
   }
 }

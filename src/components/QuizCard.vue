@@ -358,12 +358,22 @@ export default class QuizCard extends Vue {
   getSentences (
     entry = this.current.entry as string
   ): Record<string, unknown>[] {
-    return Object.entries(this.dictionaryData.sentence)
-      .filter(([k]) => k.includes(entry))
-      .map(([chinese, v]) => ({
-        chinese,
-        ...v
-      }))
+    const out: Record<string, unknown>[] = []
+
+    for (const [chinese, v] of Object.entries(this.dictionaryData.sentence)) {
+      if (chinese.includes(entry)) {
+        out.push({
+          chinese,
+          ...v
+        })
+
+        if (out.length >= 10) {
+          return out
+        }
+      }
+    }
+
+    return out
   }
 
   async startQuiz () {

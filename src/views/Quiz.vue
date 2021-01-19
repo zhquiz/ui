@@ -297,7 +297,7 @@ export default class QuizPage extends Vue {
       })
       .then((r) => r.data)
 
-    const { type, stage, direction, includeExtra, includeUndue } =
+    const { type, stage, direction, includeExtra, includeUndue, q } =
       r['settings.quiz'] || {}
 
     if (type) {
@@ -319,6 +319,8 @@ export default class QuizPage extends Vue {
     if (typeof includeUndue !== 'undefined') {
       this.$set(this, 'includeUndue', includeUndue)
     }
+
+    this.q = q || ''
 
     this.isInit = true
     this.isLoading = false

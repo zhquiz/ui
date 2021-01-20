@@ -8,9 +8,13 @@ declare global {
   }
 }
 
+const navEl = document.querySelector('nav') as HTMLElement
 const tabEl = document.querySelector('nav > ul') as HTMLUListElement
 const mainEl = document.querySelector('main') as HTMLElement
 const originalOpen = window.open
+
+navEl.classList.remove('tabs')
+tabEl.style.display = 'none'
 
 window.open = function (url = '', title = '') {
   if (!url.startsWith('/#/')) {
@@ -57,25 +61,25 @@ window.open = function (url = '', title = '') {
       if (i < 1) {
         return
       }
-      i++
 
-      const li = tabEl.querySelector(`li:nth-child(${i})`)
-      if (li) {
-        if (li.classList.contains('is-active')) {
-          setTimeout(() => {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            tabEl.querySelector('li')!.classList.add('is-active')
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            mainEl.querySelector('iframe')!.style.display = ''
-          }, 10)
-        }
+      const li = Array.from(tabEl.querySelectorAll('li'))[i]
+      if (li.classList.contains('is-active')) {
+        setTimeout(() => {
+          i--
 
-        li.remove()
+          Array.from(tabEl.querySelectorAll('li'))[i].classList.add('is-active')
+          Array.from(mainEl.querySelectorAll('iframe'))[i].style.display = ''
+        }, 10)
       }
 
-      const iframe = mainEl.querySelector(`iframe:nth-child(${i})`)
-      if (iframe) {
-        iframe.remove()
+      li.remove()
+
+      const iframe = Array.from(mainEl.querySelectorAll('iframe'))[i]
+      iframe.remove()
+
+      if (Array.from(tabEl.querySelectorAll('li')).length <= 1) {
+        navEl.classList.remove('tabs')
+        tabEl.style.display = 'none'
       }
     }
 
@@ -87,6 +91,11 @@ window.open = function (url = '', title = '') {
   })
 
   tabEl.append(li)
+
+  if (Array.from(tabEl.querySelectorAll('li')).length > 1) {
+    navEl.classList.add('tabs')
+    tabEl.style.display = ''
+  }
 
   const iframe = document.createElement('iframe')
   iframe.src = url
